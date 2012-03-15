@@ -1,11 +1,14 @@
 -module(restc).
 
 -export([request/2, request/3, request/4, request/5, request/6]).
+-export([construct_url/2, construct_url/3]).
 
 -type method()       :: head | get | put | post | trace | options | delete.
 -type url()          :: string().
 -type headers()      :: [header()].
 -type header()       :: {string(), string()}.
+-type querys()       :: [qry()].
+-type qry()          :: {string(), string()}.
 -type status_codes() :: [status_code()].
 -type status_code()  :: integer().
 -type reason()       :: term().
@@ -53,9 +56,40 @@ request(Method, Type, Url, Expect, Headers, Body) ->
             Error
     end.
 
+-spec construct_url(FullPath::url(), Query::querys()) -> Url::url().
+construct_url(FullPath, Query) ->
+    {S, N, P, _, _} = mochiweb_util:urlsplit(FullPath),
+    urlunsplit(S, N, P, Query).
+
+-spec construct_url(FullPath::url(), Path::url(), Query::querys()) -> Url::url().
+construct_url(SchemeNetloc, Path, Query) ->
+    {S, N, P1, _, _} = mochiweb_util:urlsplit(SchemeNetloc),
+    {_, _, P2, _, _} = mochiweb_util:urlsplit(Path),
+    P = path_cat(P1, P2),
+    urlunsplit(S, N, P, Query).
+
 
 %%% INTERNAL ===================================================================
 
+
+urlunsplit(S, N, P, Query) ->
+    Q = mochiweb_util:urlencode(Query),
+    mochiweb_util:urlunsplit({S, N, P, Q, []}).
+
+path_cat(P1, P2) ->
+    UL = lists:append(path_fix(P1), path_fix(P2)),
+    ["/"++U || U <- UL].
+
+path_fix(S) ->
+    PS = mochiweb_util:path_split(S),
+    path_fix(PS, []).
+
+path_fix({[], []}, Acc) ->
+    lists:reverse(Acc);
+path_fix({[], T}, Acc) ->
+    path_fix(mochiweb_util:path_split(T), Acc);
+path_fix({H, T}, Acc) ->
+    path_fix(mochiweb_util:path_split(T), [H|Acc]).
 
 get_request(Url, Headers, []) ->
     {Url, Headers};
