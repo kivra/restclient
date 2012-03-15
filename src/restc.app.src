@@ -1,0 +1,12 @@
+{application, restc,
+ [
+  {description, "Erlang Rest Client"},
+  {vsn, "0.0,1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib,
+                  inets
+                 ]},
+  {env, []}
+ ]}.
