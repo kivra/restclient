@@ -45,8 +45,8 @@ request(Method, Type, Url, Expect, Headers) ->
 -spec request(Method::method(), Type::content_type(), Url::url(),
               Expect::status_codes(), Headers::headers(), Body::body()) -> Response::response().
 request(Method, Type, Url, Expect, Headers, Body) ->
-    Accept = {"Accept", get_ctype(Type)++", */*;q=0.9"},
-    Request = get_request(Url, Type, [Accept|Headers], Body),
+    ContentTypes = get_header_ctypes(Type, Body),
+    Request = get_request(Url, Type, [ContentTypes|Headers], Body),
     Response = parse_response(httpc:request(Method, Request, [], [])),
     case Response of
         {ok, Status, H, B} ->
@@ -73,6 +73,11 @@ construct_url(SchemeNetloc, Path, Query) ->
 
 %%% INTERNAL ===================================================================
 
+
+get_header_ctypes(Type, []) ->
+    {"Accept", get_ctype(Type)++", */*;q=0.9"};
+get_header_ctypes(Type, _) ->
+    [{"Content-Type", get_ctype(Type)}|get_header_ctypes(Type, [])].
 
 check_expect(_Status, []) ->
     true;
