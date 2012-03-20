@@ -45,8 +45,8 @@ request(Method, Type, Url, Expect, Headers) ->
 -spec request(Method::method(), Type::content_type(), Url::url(),
               Expect::status_codes(), Headers::headers(), Body::body()) -> Response::response().
 request(Method, Type, Url, Expect, Headers, Body) ->
-    ContentTypes = get_header_ctypes(Type, Body),
-    Request = get_request(Url, Type, [ContentTypes|Headers], Body),
+    Accept = {"Accept", get_ctype(Type)++", */*;q=0.9"},
+    Request = get_request(Url, Type, [Accept | Headers], Body),
     Response = parse_response(httpc:request(Method, Request, [], [])),
     case Response of
         {ok, Status, H, B} ->
@@ -73,11 +73,6 @@ construct_url(SchemeNetloc, Path, Query) ->
 
 %%% INTERNAL ===================================================================
 
-
-get_header_ctypes(Type, []) ->
-    {"Accept", get_ctype(Type)++", */*;q=0.9"};
-get_header_ctypes(Type, _) ->
-    [{"Content-Type", get_ctype(Type)}|get_header_ctypes(Type, [])].
 
 check_expect(_Status, []) ->
     true;
@@ -110,11 +105,9 @@ path_fix({[], T}, Acc) ->
 path_fix({H, T}, Acc) ->
     path_fix(mochiweb_util:path_split(T), [H|Acc]).
 
-get_request(Url, _Type, Headers, []) ->
-    {Url, Headers};
 get_request(Url, Type, Headers, Body) ->
     SendBody = encode_body(Type, Body),
-    {Url, Headers, [], SendBody}.
+    {Url, Headers, get_ctype(Type), SendBody}.
 
 parse_response({ok, {{_, Status, _}, Headers, Body}}) ->
     Type = proplists:get_value("content-type", Headers),
