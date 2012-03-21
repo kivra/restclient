@@ -105,6 +105,8 @@ path_fix({[], T}, Acc) ->
 path_fix({H, T}, Acc) ->
     path_fix(mochiweb_util:path_split(T), [H|Acc]).
 
+get_request(Url, _, Headers, []) ->
+    {Url, Headers};
 get_request(Url, Type, Headers, Body) ->
     SendBody = encode_body(Type, Body),
     {Url, Headers, get_ctype(Type), SendBody}.
