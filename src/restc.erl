@@ -115,7 +115,7 @@ get_request(Url, Type, Headers, Body) ->
     {Url, Headers, get_ctype(Type), SendBody}.
 
 parse_response({ok, {{_, Status, _}, Headers, Body}}) ->
-    Type = proplists:get_value("content-type", Headers),
+    Type = proplists:get_value("content-type", Headers, []),
     Qvalues = mochiweb_util:parse_qvalues(Type),
     CType = mochiweb_util:pick_accepted_encodings(Qvalues, ?ACCEPT_ENCODINGS,
                                                   "text/plain"),
