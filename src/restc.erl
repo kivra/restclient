@@ -20,17 +20,20 @@
                         {error, Status::status_code(), Headers::headers(), Body::body()} |
                         {error, Reason::reason()}.
 
+-define(ACCEPT_ENCODINGS, ["application/json", "application/xml", "text/xml"]).
+-define(DEFAULT_ENCODING, json).
+
 
 %%% API ========================================================================
 
 
 -spec request(Method::method(), Url::url()) -> Response::response().
 request(Method, Url) ->
-    request(Method, json, Url, [], [], []).
+    request(Method, ?DEFAULT_ENCODING, Url, [], [], []).
 
 -spec request(Method::method(), Url::url(), Expect::status_codes()) -> Response::response().
 request(Method, Url, Expect) ->
-    request(Method, json, Url, Expect, [], []).
+    request(Method, ?DEFAULT_ENCODING, Url, Expect, [], []).
 
 -spec request(Method::method(), Type::content_type(), Url::url(),
               Expect::status_codes()) -> Response::response().
@@ -84,7 +87,7 @@ encode_body(json, Body) ->
 encode_body(xml, Body) ->
     lists:flatten(xmerl:export_simple(Body, xmerl_xml));
 encode_body(_, Body) ->
-   encode_body(json, Body).
+   encode_body(?DEFAULT_ENCODING, Body).
 
 urlunsplit(S, N, P, Query) ->
     Q = mochiweb_util:urlencode(Query),
@@ -113,7 +116,9 @@ get_request(Url, Type, Headers, Body) ->
 
 parse_response({ok, {{_, Status, _}, Headers, Body}}) ->
     Type = proplists:get_value("content-type", Headers),
-    {CType, _} = mochiweb_util:parse_header(Type),
+    Qvalues = mochiweb_util:parse_qvalues(Type),
+    [CType|_] = mochiweb_util:pick_accepted_encodings(Qvalues, ?ACCEPT_ENCODINGS,
+                                                  "text/plain"),
     Body2 = parse_body(CType, Body),
     {ok, Status, Headers, Body2};
 parse_response({error, Type}) ->
