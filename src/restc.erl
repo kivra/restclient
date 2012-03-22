@@ -117,18 +117,18 @@ get_request(Url, Type, Headers, Body) ->
 parse_response({ok, {{_, Status, _}, Headers, Body}}) ->
     Type = proplists:get_value("content-type", Headers),
     Qvalues = mochiweb_util:parse_qvalues(Type),
-    [CType|_] = mochiweb_util:pick_accepted_encodings(Qvalues, ?ACCEPT_ENCODINGS,
+    CType = mochiweb_util:pick_accepted_encodings(Qvalues, ?ACCEPT_ENCODINGS,
                                                   "text/plain"),
     Body2 = parse_body(CType, Body),
     {ok, Status, Headers, Body2};
 parse_response({error, Type}) ->
     {error, Type}.
 
+parse_body([], Body) -> Body;
 parse_body(_, []) -> [];
-parse_body("application/json", Body) -> mochijson2:decode(Body, [{format, proplist}]);
-parse_body("application/xml", Body) -> erlsom:simple_form(Body);
-parse_body("text/xml", Body) -> parse_body("application/xml", Body);
-parse_body(_, Body) -> Body.
+parse_body(["application/json"|_], Body) -> mochijson2:decode(Body, [{format, proplist}]);
+parse_body(["application/xml"|_], Body) -> erlsom:simple_form(Body);
+parse_body(["text/xml"|_], Body) -> parse_body("application/xml", Body).
 
 get_ctype(json) -> "application/json";
 get_ctype(xml) -> "application/xml";
