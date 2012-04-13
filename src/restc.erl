@@ -20,7 +20,6 @@
                         {error, Status::status_code(), Headers::headers(), Body::body()} |
                         {error, Reason::reason()}.
 
--define(ACCEPT_ENCODINGS, ["application/json", "application/xml", "text/xml"]).
 -define(DEFAULT_ENCODING, json).
 
 
@@ -50,7 +49,8 @@ request(Method, Type, Url, Expect, Headers) ->
 request(Method, Type, Url, Expect, Headers, Body) ->
     Accept = {"Accept", get_ctype(Type)++", */*;q=0.9"},
     Request = get_request(Url, Type, [Accept | Headers], Body),
-    Response = parse_response(httpc:request(Method, Request, [], [])),
+    Response = parse_response(httpc:request(Method, Request,
+                                            [], [{body_format, binary}])),
     case Response of
         {ok, Status, H, B} ->
             case check_expect(Status, Expect) of
@@ -83,7 +83,7 @@ check_expect(Status, Expect) ->
     lists:member(Status, Expect).
 
 encode_body(json, Body) ->
-    binary_to_list(iolist_to_binary(mochijson2:encode(Body)));
+    jsx:to_json(Body);
 encode_body(xml, Body) ->
     lists:flatten(xmerl:export_simple(Body, xmerl_xml));
 encode_body(_, Body) ->
@@ -116,9 +116,7 @@ get_request(Url, Type, Headers, Body) ->
 
 parse_response({ok, {{_, Status, _}, Headers, Body}}) ->
     Type = proplists:get_value("content-type", Headers, []),
-    Qvalues = mochiweb_util:parse_qvalues(Type),
-    CType = mochiweb_util:pick_accepted_encodings(Qvalues, ?ACCEPT_ENCODINGS,
-                                                  "text/plain"),
+    {CType, _} = mochiweb_util:parse_header(Type),
     Body2 = parse_body(CType, Body),
     {ok, Status, Headers, Body2};
 parse_response({error, Type}) ->
@@ -126,9 +124,12 @@ parse_response({error, Type}) ->
 
 parse_body([], Body) -> Body;
 parse_body(_, []) -> [];
-parse_body(["application/json"|_], Body) -> mochijson2:decode(Body, [{format, proplist}]);
-parse_body(["application/xml"|_], Body) -> erlsom:simple_form(Body);
-parse_body(["text/xml"|_], Body) -> parse_body("application/xml", Body).
+parse_body("application/json", Body) -> jsx:to_term(Body);
+parse_body("application/xml", Body) ->
+    {ok, Data, _} = erlsom:simple_form(binary_to_list(Body)),
+    Data;
+parse_body("text/xml", Body) -> parse_body("application/xml", Body);
+parse_body(_, Body) -> Body.
 
 get_ctype(json) -> "application/json";
 get_ctype(xml) -> "application/xml";
