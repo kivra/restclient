@@ -3,7 +3,7 @@ restclient -- An erlang REST Client library
 
 ## DESCRIPTION
 
-restclient is a library to help with consuming RESTful web services. It supports encoding and decoding JSON and XML and comes with a convinencien function for working with urls and query parameters.
+restclient is a library to help with consuming RESTful web services. It supports encoding and decoding JSON, Percent and XML and comes with a convinencien function for working with urls and query parameters.
 
 ## USAGE
 
