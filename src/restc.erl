@@ -84,6 +84,8 @@ check_expect(Status, Expect) ->
 
 encode_body(json, Body) ->
     jsx:to_json(Body);
+encode_body(percent, Body) ->
+    mochiweb_util:urlencode(Body);
 encode_body(xml, Body) ->
     lists:flatten(xmerl:export_simple(Body, xmerl_xml));
 encode_body(_, Body) ->
@@ -122,16 +124,17 @@ parse_response({ok, {{_, Status, _}, Headers, Body}}) ->
 parse_response({error, Type}) ->
     {error, Type}.
 
-parse_body([], Body) -> Body;
-parse_body(_, []) -> [];
+parse_body([], Body)                 -> Body;
+parse_body(_, [])                    -> [];
 parse_body("application/json", Body) -> jsx:to_term(Body);
-parse_body("application/xml", Body) ->
+parse_body("application/xml", Body)  ->
     {ok, Data, _} = erlsom:simple_form(binary_to_list(Body)),
     Data;
 parse_body("text/xml", Body) -> parse_body("application/xml", Body);
-parse_body(_, Body) -> Body.
+parse_body(_, Body)          -> Body.
 
-get_ctype(json) -> "application/json";
-get_ctype(xml) -> "application/xml";
-get_ctype(_) -> get_ctype(json).
+get_ctype(json)    -> "application/json";
+get_ctype(xml)     -> "application/xml";
+get_ctype(percent) -> "application/x-www-form-urlencoded";
+get_ctype(_)       -> get_ctype(json).
 
