@@ -12,7 +12,7 @@
 -type status_codes() :: [status_code()].
 -type status_code()  :: integer().
 -type reason()       :: term().
--type content_type() :: json | xml.
+-type content_type() :: json | xml | percent.
 -type property()     :: atom() | tuple().
 -type proplist()     :: [property()].
 -type body()         :: proplist().
