@@ -21,6 +21,7 @@
                         {error, Reason::reason()}.
 
 -define(DEFAULT_ENCODING, json).
+-define(DEFAULT_CTYPE, "application/json").
 
 
 %%% API ========================================================================
@@ -117,7 +118,7 @@ get_request(Url, Type, Headers, Body) ->
     {Url, Headers, get_ctype(Type), SendBody}.
 
 parse_response({ok, {{_, Status, _}, Headers, Body}}) ->
-    Type = proplists:get_value("content-type", Headers, []),
+    Type = proplists:get_value("content-type", Headers, ?DEFAULT_CTYPE),
     {CType, _} = mochiweb_util:parse_header(Type),
     Body2 = parse_body(CType, Body),
     {ok, Status, Headers, Body2};
