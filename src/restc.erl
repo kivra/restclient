@@ -127,6 +127,7 @@ parse_response({error, Type}) ->
 
 parse_body([], Body)                 -> Body;
 parse_body(_, [])                    -> [];
+parse_body(_, <<>>)                  -> [];
 parse_body("application/json", Body) -> jsx:to_term(Body);
 parse_body("application/xml", Body)  ->
     {ok, Data, _} = erlsom:simple_form(binary_to_list(Body)),
