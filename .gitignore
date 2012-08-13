@@ -2,4 +2,5 @@ ebin
 deps/
 .dialyzer_plt
 erl_crash.dump
+.eunit
 

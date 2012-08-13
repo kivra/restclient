@@ -119,7 +119,7 @@ get_request(Url, Type, Headers, Body) ->
 
 parse_response({ok, {{_, Status, _}, Headers, Body}}) ->
     Type = proplists:get_value("content-type", Headers, ?DEFAULT_CTYPE),
-    {CType, _} = mochiweb_util:parse_header(Type),
+    [{CType, 1.0} | _] = mochiweb_util:parse_qvalues(Type),
     Body2 = parse_body(CType, Body),
     {ok, Status, Headers, Body2};
 parse_response({error, Type}) ->
