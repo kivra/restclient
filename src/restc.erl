@@ -48,10 +48,10 @@ request(Method, Type, Url, Expect, Headers) ->
 -spec request(Method::method(), Type::content_type(), Url::url(),
               Expect::status_codes(), Headers::headers(), Body::body()) -> Response::response().
 request(Method, Type, Url, Expect, Headers, Body) ->
-    Accept = {"Accept", get_accesstype(Type)++", */*;q=0.9"},
-    CType = {"Content-Type", get_ctype(Type)},
-    Headers1 = [Accept, CType],
-    Request = get_request(Url, Type, [Headers1 | Headers], Body),
+    Headers1 = [{"Accept", get_accesstype(Type)++", */*;q=0.9"} | Headers],
+    Headers2 = [{"Content-Type", get_ctype(Type)} | Headers1],
+    Request = get_request(Url, Type, Headers2,  Body),
+    io:format("~p", [Request]),
     Response = parse_response(httpc:request(Method, Request,
                                             [], [{body_format, binary}])),
     case Response of
