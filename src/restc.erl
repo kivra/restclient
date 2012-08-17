@@ -48,8 +48,10 @@ request(Method, Type, Url, Expect, Headers) ->
 -spec request(Method::method(), Type::content_type(), Url::url(),
               Expect::status_codes(), Headers::headers(), Body::body()) -> Response::response().
 request(Method, Type, Url, Expect, Headers, Body) ->
-    Accept = {"Accept", get_ctype(Type)++", */*;q=0.9"},
-    Request = get_request(Url, Type, [Accept | Headers], Body),
+    Accept = {"Accept", get_accesstype(Type)++", */*;q=0.9"},
+    CType = {"Content-Type", get_ctype(Type)},
+    Headers1 = [Accept, CType],
+    Request = get_request(Url, Type, [Headers1 | Headers], Body),
     Response = parse_response(httpc:request(Method, Request,
                                             [], [{body_format, binary}])),
     case Response of
@@ -135,8 +137,12 @@ parse_body("application/xml", Body)  ->
 parse_body("text/xml", Body) -> parse_body("application/xml", Body);
 parse_body(_, Body)          -> Body.
 
+get_accesstype(json)    -> "application/json";
+get_accesstype(xml)     -> "application/xml";
+get_accesstype(percent) -> "application/json";
+get_accesstype(_)       -> get_ctype(?DEFAULT_ENCODING).
+
 get_ctype(json)    -> "application/json";
 get_ctype(xml)     -> "application/xml";
 get_ctype(percent) -> "application/x-www-form-urlencoded";
-get_ctype(_)       -> get_ctype(json).
-
+get_ctype(_)       -> get_ctype(?DEFAULT_ENCODING).
