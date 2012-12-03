@@ -146,10 +146,13 @@ get_request(Url, Type, Headers, Body) ->
 
 parse_response({ok, {{_, Status, _}, Headers, Body}}) ->
     Type = case lists:keyfind("content-type", 1, Headers) of
-        false -> ?DEFAULT_CTYPE;
+        false    -> ?DEFAULT_CTYPE;
         {_, Val} -> Val
     end,
-    [CType, _] = string:tokens(Type, ";"),
+    CType = case string:tokens(Type, ";") of
+        [CVal]    -> CVal;
+        [CVal, _] -> CVal
+    end,
     Body2 = parse_body(CType, Body),
     {ok, Status, Headers, Body2};
 parse_response({error, Type}) ->
