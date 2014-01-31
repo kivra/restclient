@@ -2,7 +2,7 @@
 %%
 %% restc: Erlang Rest Client
 %%
-%% Copyright (c) 2012 KIVRA
+%% Copyright (c) 2012-2014 KIVRA
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining a
 %% copy of this software and associated documentation files (the "Software"),
@@ -26,14 +26,12 @@
 
 -module(restc).
 
--export([
-         request/1
-         ,request/2
-         ,request/3
-         ,request/4
-         ,request/5
-         ,request/6
-        ]).
+-export([request/1]).
+-export([request/2]).
+-export([request/3]).
+-export([request/4]).
+-export([request/5]).
+-export([request/6]).
 
 -type method()       :: binary | head | get | put | post | trace | options | delete.
 -type url()          :: binary | string().
@@ -126,9 +124,9 @@ encode_body(_, Body) ->
 parse_response({ok, Status, Headers, Client}) ->
     Type = proplists:get_value(<<"Content-Type">>, Headers, ?DEFAULT_CTYPE),
     Type2 = parse_type(Type),
-    {ok, Body, Client2} = hackney:body(Client),
+    {ok, Body} = hackney:body(Client),
     Body2 = parse_body(Type2, Body),
-    {ok, Status, Headers, Body2, Client2};
+    {ok, Status, Headers, Body2};
 parse_response({error, Type}) ->
     {error, Type}.
 

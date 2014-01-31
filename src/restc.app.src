@@ -1,8 +1,9 @@
+% vim: ft=erlang:
 %% ----------------------------------------------------------------------------
 %%
 %% restc: Erlang Rest Client
 %%
-%% Copyright (c) 2012 KIVRA
+%% Copyright (c) 2012-2014 KIVRA
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining a
 %% copy of this software and associated documentation files (the "Software"),
@@ -23,19 +24,20 @@
 %% DEALINGS IN THE SOFTWARE.
 %%
 %% ----------------------------------------------------------------------------
+{application, restc, [ {description,  "Erlang Rest Client"}
+                     , {vsn,          "0.2.0"}
+                     , {applications, [ kernel
+                                      , stdlib
+                                      , asn1
+                                      , crypto
+                                      , public_key
+                                      , ssl
+                                      , mimetypes
+                                      , hackney_lib
+                                      , hackney
+                                      ]}
+                     , {env,          []}
+                     , {registered,   []}
+                     ]}.
 
-{application, restc,
- [
-  {description, "Erlang Rest Client"},
-  {vsn, git},
-  {registered, []},
-  {applications, [
-                  kernel
-                  ,stdlib
-                  ,crypto
-                  ,public_key
-                  ,ssl
-                  ,hackney
-                 ]},
-  {env, []}
- ]}.
+%%% eof
