@@ -38,6 +38,7 @@
                                       ]}
                      , {env,          []}
                      , {registered,   []}
+                     , {modules,      []}
                      ]}.
 
 %%% eof
