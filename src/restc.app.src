@@ -32,8 +32,6 @@
                                       , crypto
                                       , public_key
                                       , ssl
-                                      , mimetypes
-                                      , hackney_lib
                                       , hackney
                                       ]}
                      , {env,          []}
