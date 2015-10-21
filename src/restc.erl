@@ -33,10 +33,15 @@
 -export([request/5]).
 -export([request/6]).
 
+-export([construct_url/2]).
+-export([construct_url/3]).
+
 -type method()       :: binary | head | get | put | post | trace | options | delete.
 -type url()          :: binary() | string().
 -type headers()      :: [header()].
 -type header()       :: {binary(), binary()}.
+-type querys()       :: [qry()].
+-type qry()          :: {string(), string()}.
 -type status_codes() :: [status_code()].
 -type status_code()  :: integer().
 -type reason()       :: term().
@@ -92,9 +97,20 @@ request(Method, Type, Url, Expect, Headers, Body) ->
             Error
     end.
 
+-spec construct_url(FullPath::url(), Query::querys()) -> Url::url().
+construct_url(FullPath, Query) ->
+    {S, N, P, _, _} = mochiweb_util:urlsplit(FullPath),
+    Q = mochiweb_util:urlencode(Query),
+    mochiweb_util:urlunsplit({S, N, P, Q, []}).
+
+-spec construct_url(FullPath::url(), Path::url(), Query::querys()) -> Url::url().
+construct_url(SchemeNetloc, Path, Query) ->
+    {S, N, P1, _, _} = mochiweb_util:urlsplit(SchemeNetloc),
+    {_, _, P2, _, _} = mochiweb_util:urlsplit(Path),
+    P = path_cat(P1, P2),
+    urlunsplit(S, N, P, Query).
 
 %%% INTERNAL ===================================================================
-
 
 do_request(post, Type, Url, Headers, Body) ->
     Body2 = encode_body(Type, Body),
@@ -117,7 +133,26 @@ encode_body(percent, Body) ->
 encode_body(xml, Body) ->
     lists:flatten(xmerl:export_simple(Body, xmerl_xml));
 encode_body(_, Body) ->
-   encode_body(?DEFAULT_ENCODING, Body).
+    encode_body(?DEFAULT_ENCODING, Body).
+
+urlunsplit(S, N, P, Query) ->
+    Q = mochiweb_util:urlencode(Query),
+    mochiweb_util:urlunsplit({S, N, P, Q, []}).
+
+path_cat(P1, P2) ->
+    UL = lists:append(path_fix(P1), path_fix(P2)),
+    ["/"++U || U <- UL].
+
+path_fix(S) ->
+    PS = mochiweb_util:path_split(S),
+    path_fix(PS, []).
+
+path_fix({[], []}, Acc) ->
+    lists:reverse(Acc);
+path_fix({[], T}, Acc) ->
+    path_fix(mochiweb_util:path_split(T), Acc);
+path_fix({H, T}, Acc) ->
+    path_fix(mochiweb_util:path_split(T), [H|Acc]).
 
 parse_response({ok, Status, Headers, Client}) ->
     Type = proplists:get_value(<<"Content-Type">>, Headers, ?DEFAULT_CTYPE),
