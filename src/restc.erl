@@ -1,8 +1,8 @@
 %% ----------------------------------------------------------------------------
 %%
-%% restclient: An erlang REST Client library
+%% restc: Erlang Rest Client
 %%
-%% Copyright (c) 2012 KIVRA
+%% Copyright (c) 2012-2014 KIVRA
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining a
 %% copy of this software and associated documentation files (the "Software"),
@@ -26,32 +26,36 @@
 
 -module(restc).
 
--export([request/2, request/3, request/4, request/5, request/6]).
--export([construct_url/2, construct_url/3]).
+-export([request/1]).
+-export([request/2]).
+-export([request/3]).
+-export([request/4]).
+-export([request/5]).
+-export([request/6]).
 
--type method()       :: head | get | put | post | trace | options | delete.
--type url()          :: string().
+-type method()       :: binary | head | get | put | post | trace | options | delete.
+-type url()          :: binary() | string().
 -type headers()      :: [header()].
--type header()       :: {string(), string()}.
--type querys()       :: [qry()].
--type qry()          :: {string(), string()}.
+-type header()       :: {binary(), binary()}.
 -type status_codes() :: [status_code()].
 -type status_code()  :: integer().
 -type reason()       :: term().
 -type content_type() :: json | xml | percent.
--type property()     :: atom() | tuple().
--type proplist()     :: [property()].
--type body()         :: proplist().
+-type body()         :: binary() | jsx:json_term() | erlsom:simple_form().
 -type response()     :: {ok, Status::status_code(), Headers::headers(), Body::body()} |
                         {error, Status::status_code(), Headers::headers(), Body::body()} |
                         {error, Reason::reason()}.
 
 -define(DEFAULT_ENCODING, json).
--define(DEFAULT_CTYPE, "application/json").
+-define(DEFAULT_CTYPE, <<"application/json">>).
 
 
 %%% API ========================================================================
 
+
+-spec request(Url::url()) -> Response::response().
+request(Url) ->
+    request(get, ?DEFAULT_ENCODING, Url, [], [], []).
 
 -spec request(Method::method(), Url::url()) -> Response::response().
 request(Method, Url) ->
@@ -74,11 +78,10 @@ request(Method, Type, Url, Expect, Headers) ->
 -spec request(Method::method(), Type::content_type(), Url::url(),
               Expect::status_codes(), Headers::headers(), Body::body()) -> Response::response().
 request(Method, Type, Url, Expect, Headers, Body) ->
-    Headers1 = [{"Accept", get_accesstype(Type)++", */*;q=0.9"} | Headers],
-    Headers2 = [{"Content-Type", get_ctype(Type)} | Headers1],
-    Request = get_request(Url, Type, Headers2,  Body),
-    Response = parse_response(httpc:request(Method, Request,
-                                            [], [{body_format, binary}])),
+    AccessType = get_accesstype(Type),
+    Headers1 = [{<<"Accept">>, <<AccessType/binary, ", */*;q=0.9">>} | Headers],
+    Headers2 = [{<<"Content-Type">>, get_ctype(Type)} | Headers1],
+    Response = parse_response(do_request(Method, Type, Url, Headers2, Body)),
     case Response of
         {ok, Status, H, B} ->
             case check_expect(Status, Expect) of
@@ -89,21 +92,18 @@ request(Method, Type, Url, Expect, Headers, Body) ->
             Error
     end.
 
--spec construct_url(FullPath::url(), Query::querys()) -> Url::url().
-construct_url(FullPath, Query) ->
-    {S, N, P, _, _} = mochiweb_util:urlsplit(FullPath),
-    urlunsplit(S, N, P, Query).
-
--spec construct_url(FullPath::url(), Path::url(), Query::querys()) -> Url::url().
-construct_url(SchemeNetloc, Path, Query) ->
-    {S, N, P1, _, _} = mochiweb_util:urlsplit(SchemeNetloc),
-    {_, _, P2, _, _} = mochiweb_util:urlsplit(Path),
-    P = path_cat(P1, P2),
-    urlunsplit(S, N, P, Query).
-
 
 %%% INTERNAL ===================================================================
 
+
+do_request(post, Type, Url, Headers, Body) ->
+    Body2 = encode_body(Type, Body),
+    hackney:request(post, Url, Headers, Body2);
+do_request(put, Type, Url, Headers, Body) ->
+    Body2 = encode_body(Type, Body),
+    hackney:request(put, Url, Headers, Body2);
+do_request(Method, _, Url, Headers, _) ->
+    hackney:request(Method, Url, Headers).
 
 check_expect(_Status, []) ->
     true;
@@ -111,7 +111,7 @@ check_expect(Status, Expect) ->
     lists:member(Status, Expect).
 
 encode_body(json, Body) ->
-    jsx:to_json(Body);
+    jsx:encode(Body);
 encode_body(percent, Body) ->
     mochiweb_util:urlencode(Body);
 encode_body(xml, Body) ->
@@ -119,61 +119,35 @@ encode_body(xml, Body) ->
 encode_body(_, Body) ->
    encode_body(?DEFAULT_ENCODING, Body).
 
-urlunsplit(S, N, P, Query) ->
-    Q = mochiweb_util:urlencode(Query),
-    mochiweb_util:urlunsplit({S, N, P, Q, []}).
-
-path_cat(P1, P2) ->
-    UL = lists:append(path_fix(P1), path_fix(P2)),
-    ["/"++U || U <- UL].
-
-path_fix(S) ->
-    PS = mochiweb_util:path_split(S),
-    path_fix(PS, []).
-
-path_fix({[], []}, Acc) ->
-    lists:reverse(Acc);
-path_fix({[], T}, Acc) ->
-    path_fix(mochiweb_util:path_split(T), Acc);
-path_fix({H, T}, Acc) ->
-    path_fix(mochiweb_util:path_split(T), [H|Acc]).
-
-get_request(Url, _, Headers, []) ->
-    {Url, Headers};
-get_request(Url, Type, Headers, Body) ->
-    SendBody = encode_body(Type, Body),
-    {Url, Headers, get_ctype(Type), SendBody}.
-
-parse_response({ok, {{_, Status, _}, Headers, Body}}) ->
-    Type = case lists:keyfind("content-type", 1, Headers) of
-        false    -> ?DEFAULT_CTYPE;
-        {_, Val} -> Val
-    end,
-    CType = case string:tokens(Type, ";") of
-        [CVal]    -> CVal;
-        [CVal, _] -> CVal
-    end,
-    Body2 = parse_body(CType, Body),
+parse_response({ok, Status, Headers, Client}) ->
+    Type = proplists:get_value(<<"Content-Type">>, Headers, ?DEFAULT_CTYPE),
+    Type2 = parse_type(Type),
+    {ok, Body} = hackney:body(Client),
+    Body2 = parse_body(Type2, Body),
     {ok, Status, Headers, Body2};
 parse_response({error, Type}) ->
     {error, Type}.
 
-parse_body([], Body)                 -> Body;
-parse_body(_, [])                    -> [];
-parse_body(_, <<>>)                  -> [];
-parse_body("application/json", Body) -> jsx:decode(Body);
-parse_body("application/xml", Body)  ->
+parse_type(Type) ->
+    case binary:split(Type, <<";">>) of
+        [CType, _] -> CType;
+        _ -> Type
+    end.
+
+parse_body(_, <<>>)                      -> [];
+parse_body(<<"application/json">>, Body) -> jsx:decode(Body);
+parse_body(<<"application/xml">>, Body)  ->
     {ok, Data, _} = erlsom:simple_form(binary_to_list(Body)),
     Data;
-parse_body("text/xml", Body) -> parse_body("application/xml", Body);
+parse_body(<<"text/xml">>, Body) -> parse_body(<<"application/xml">>, Body);
 parse_body(_, Body)          -> Body.
 
-get_accesstype(json)    -> "application/json";
-get_accesstype(xml)     -> "application/xml";
-get_accesstype(percent) -> "application/json";
+get_accesstype(json)    -> <<"application/json">>;
+get_accesstype(xml)     -> <<"application/xml">>;
+get_accesstype(percent) -> <<"application/json">>;
 get_accesstype(_)       -> get_ctype(?DEFAULT_ENCODING).
 
-get_ctype(json)    -> "application/json";
-get_ctype(xml)     -> "application/xml";
-get_ctype(percent) -> "application/x-www-form-urlencoded";
+get_ctype(json)    -> <<"application/json">>;
+get_ctype(xml)     -> <<"application/xml">>;
+get_ctype(percent) -> <<"application/x-www-form-urlencoded">>;
 get_ctype(_)       -> get_ctype(?DEFAULT_ENCODING).
