@@ -125,7 +125,6 @@ parse_response({ok, Status, Headers, Client}) ->
     Type = proplists:get_value(<<"Content-Type">>, Headers, ?DEFAULT_CTYPE),
     Type2 = parse_type(Type),
     {ok, Body} = hackney:body(Client),
-    ok = hackney:close(Client),
     Body2 = parse_body(Type2, Body),
     {ok, Status, Headers, Body2};
 parse_response({error, Type}) ->
