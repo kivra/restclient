@@ -1,4 +1,4 @@
-restclient(0.3.0) -- An erlang REST Client library
+restclient -- An erlang REST Client library
 ====================================
 
 ## DESCRIPTION
