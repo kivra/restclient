@@ -154,6 +154,8 @@ path_fix({[], T}, Acc) ->
 path_fix({H, T}, Acc) ->
     path_fix(mochiweb_util:path_split(T), [H|Acc]).
 
+parse_response({ok, 204, Headers, _Client}) ->
+    {ok, 204, Headers, []};
 parse_response({ok, Status, Headers, Client}) ->
     Type = proplists:get_value(<<"Content-Type">>, Headers, ?DEFAULT_CTYPE),
     Type2 = parse_type(Type),
