@@ -32,6 +32,7 @@
 -export([request/4]).
 -export([request/5]).
 -export([request/6]).
+-export([request/7]).
 
 -export([construct_url/2]).
 -export([construct_url/3]).
@@ -40,6 +41,8 @@
 -type url()          :: binary() | string().
 -type headers()      :: [header()].
 -type header()       :: {binary(), binary()}.
+-type options()      :: [option()].
+-type option()       :: {atom(), term()}.
 -type querys()       :: [qry()].
 -type qry()          :: {string(), string()}.
 -type status_codes() :: [status_code()].
@@ -60,33 +63,38 @@
 
 -spec request(Url::url()) -> Response::response().
 request(Url) ->
-    request(get, ?DEFAULT_ENCODING, Url, [], [], []).
+    request(get, ?DEFAULT_ENCODING, Url, [], [], [], []).
 
 -spec request(Method::method(), Url::url()) -> Response::response().
 request(Method, Url) ->
-    request(Method, ?DEFAULT_ENCODING, Url, [], [], []).
+    request(Method, ?DEFAULT_ENCODING, Url, [], [], [], []).
 
 -spec request(Method::method(), Url::url(), Expect::status_codes()) -> Response::response().
 request(Method, Url, Expect) ->
-    request(Method, ?DEFAULT_ENCODING, Url, Expect, [], []).
+    request(Method, ?DEFAULT_ENCODING, Url, Expect, [], [], []).
 
 -spec request(Method::method(), Type::content_type(), Url::url(),
               Expect::status_codes()) -> Response::response().
 request(Method, Type, Url, Expect) ->
-    request(Method, Type, Url, Expect, [], []).
+    request(Method, Type, Url, Expect, [], [], []).
 
 -spec request(Method::method(), Type::content_type(), Url::url(),
               Expect::status_codes(), Headers::headers()) -> Response::response().
 request(Method, Type, Url, Expect, Headers) ->
-    request(Method, Type, Url, Expect, Headers, []).
+    request(Method, Type, Url, Expect, Headers, [], []).
 
 -spec request(Method::method(), Type::content_type(), Url::url(),
               Expect::status_codes(), Headers::headers(), Body::body()) -> Response::response().
 request(Method, Type, Url, Expect, Headers, Body) ->
+    request(Method, Type, Url, Expect, Headers, Body, []).
+
+-spec request(Method::method(), Type::content_type(), Url::url(),
+    Expect::status_codes(), Headers::headers(), Body::body(), Options::options()) -> Response::response().
+request(Method, Type, Url, Expect, Headers, Body, Options) ->
     AccessType = get_accesstype(Type),
     Headers1 = [{<<"Accept">>, <<AccessType/binary, ", */*;q=0.9">>} | Headers],
     Headers2 = [{<<"Content-Type">>, get_ctype(Type)} | Headers1],
-    Response = parse_response(do_request(Method, Type, Url, Headers2, Body)),
+    Response = parse_response(do_request(Method, Type, Url, Headers2, Body, Options)),
     case Response of
         {ok, Status, H, B} ->
             case check_expect(Status, Expect) of
@@ -112,14 +120,14 @@ construct_url(SchemeNetloc, Path, Query) ->
 
 %%% INTERNAL ===================================================================
 
-do_request(post, Type, Url, Headers, Body) ->
+do_request(post, Type, Url, Headers, Body, Options) ->
     Body2 = encode_body(Type, Body),
-    hackney:request(post, Url, Headers, Body2);
-do_request(put, Type, Url, Headers, Body) ->
+    hackney:request(post, Url, Headers, Body2, Options);
+do_request(put, Type, Url, Headers, Body, Options) ->
     Body2 = encode_body(Type, Body),
-    hackney:request(put, Url, Headers, Body2);
-do_request(Method, _, Url, Headers, _) ->
-    hackney:request(Method, Url, Headers).
+    hackney:request(put, Url, Headers, Body2, Options);
+do_request(Method, _, Url, Headers, _, Options) ->
+    hackney:request(Method, Url, Headers, [], Options).
 
 check_expect(_Status, []) ->
     true;
@@ -188,3 +196,4 @@ get_ctype(json)    -> <<"application/json">>;
 get_ctype(xml)     -> <<"application/xml">>;
 get_ctype(percent) -> <<"application/x-www-form-urlencoded">>;
 get_ctype(_)       -> get_ctype(?DEFAULT_ENCODING).
+
