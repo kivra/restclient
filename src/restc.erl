@@ -42,7 +42,7 @@
 -type headers()      :: [header()].
 -type header()       :: {binary(), binary()}.
 -type options()      :: [option()].
--type option()       :: {atom(), term()}.
+-type option()       :: {atom(), term()} | atom().
 -type querys()       :: [qry()].
 -type qry()          :: {string(), string()}.
 -type status_codes() :: [status_code()].
