@@ -7,3 +7,4 @@ erl_crash.dump
 *.plt
 .erlang.mk
 _build
+*.crashdump
