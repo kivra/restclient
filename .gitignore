@@ -3,4 +3,7 @@ deps/
 .dialyzer_plt
 erl_crash.dump
 .eunit
-
+.rebar
+*.plt
+.erlang.mk
+_build
