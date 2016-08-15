@@ -1,0 +1,12 @@
+[{<<"certifi">>,{pkg,<<"certifi">>,<<"0.4.0">>},1},
+ {<<"erlsom">>,{pkg,<<"erlsom">>,<<"1.4.1">>},0},
+ {<<"hackney">>,{pkg,<<"hackney">>,<<"1.6.1">>},0},
+ {<<"idna">>,{pkg,<<"idna">>,<<"1.2.0">>},1},
+ {<<"jsx">>,{pkg,<<"jsx">>,<<"2.8.0">>},0},
+ {<<"metrics">>,{pkg,<<"metrics">>,<<"1.0.1">>},1},
+ {<<"mimerl">>,{pkg,<<"mimerl">>,<<"1.0.2">>},1},
+ {<<"mochiweb_util">>,
+  {git,"https://github.com/kivra/mochiweb_util",
+       {ref,"de4fd402f7c1e1a6e683f73a41ae863b69888402"}},
+  0},
+ {<<"ssl_verify_fun">>,{pkg,<<"ssl_verify_fun">>,<<"1.1.0">>},1}].

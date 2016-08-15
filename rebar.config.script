@@ -1,0 +1,13 @@
+case erlang:function_exported(rebar3, main, 1) of
+    true -> % rebar3
+        CONFIG;
+    false -> % rebar 2.x or older
+        %% Rebuild deps, possibly including those that have been moved to
+        %% profiles
+        [{deps, [
+            {hackney,       ".*", {git, "https://github.com/benoitc/hackney.git",   {tag, "1.6.1"}}},
+            {jsx,           ".*", {git, "https://github.com/talentdeficit/jsx.git", {tag, "v2.6.1"}}},
+            {erlsom,        ".*", {git, "https://github.com/willemdj/erlsom.git",   {tag, "v1.4.1"}}},
+            {mochiweb_util, ".*", {git,"https://github.com/kivra/mochiweb_util",    "de4fd402f7c1e1a6e683f73a41ae863b69888402"}}
+        ]} | [Config || {Key, _Value}=Config <- CONFIG, Key =/= deps]]
+end.

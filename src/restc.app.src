@@ -37,6 +37,9 @@
                      , {env,          []}
                      , {registered,   []}
                      , {modules,      []}
+                     , {maintainers,  ["kivra"]}
+                     , {licenses,     ["MIT"]}
+                     , {links,        [{"GitHub", "https://github.com/kivra/restclient"}]}
                      ]}.
 
 %%% eof
