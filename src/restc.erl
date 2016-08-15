@@ -37,7 +37,7 @@
 -export([construct_url/2]).
 -export([construct_url/3]).
 
--type method()       :: binary | head | get | put | post | trace | options | delete.
+-type method()       :: binary | head | get | put | patch | post | trace | options | delete.
 -type url()          :: binary() | string().
 -type headers()      :: [header()].
 -type header()       :: {binary(), binary()}.
@@ -126,6 +126,9 @@ do_request(post, Type, Url, Headers, Body, Options) ->
 do_request(put, Type, Url, Headers, Body, Options) ->
     Body2 = encode_body(Type, Body),
     hackney:request(put, Url, Headers, Body2, Options);
+do_request(patch, Type, Url, Headers, Body, Options) ->
+    Body2 = encode_body(Type, Body),
+    hackney:request(patch, Url, Headers, Body2, Options);
 do_request(Method, _, Url, Headers, _, Options) ->
     hackney:request(Method, Url, Headers, [], Options).
 
