@@ -1,3 +1,4 @@
+{"1.1.0",
 [{<<"certifi">>,{pkg,<<"certifi">>,<<"0.4.0">>},1},
  {<<"erlsom">>,{pkg,<<"erlsom">>,<<"1.4.1">>},0},
  {<<"hackney">>,{pkg,<<"hackney">>,<<"1.6.1">>},0},
@@ -5,8 +6,17 @@
  {<<"jsx">>,{pkg,<<"jsx">>,<<"2.8.0">>},0},
  {<<"metrics">>,{pkg,<<"metrics">>,<<"1.0.1">>},1},
  {<<"mimerl">>,{pkg,<<"mimerl">>,<<"1.0.2">>},1},
- {<<"mochiweb_util">>,
-  {git,"https://github.com/kivra/mochiweb_util",
-       {ref,"de4fd402f7c1e1a6e683f73a41ae863b69888402"}},
-  0},
- {<<"ssl_verify_fun">>,{pkg,<<"ssl_verify_fun">>,<<"1.1.0">>},1}].
+ {<<"mochiweb_util">>,{pkg,<<"mochiweb_util">>,<<"0.1.0">>},0},
+ {<<"ssl_verify_fun">>,{pkg,<<"ssl_verify_fun">>,<<"1.1.0">>},1}]}.
+[
+{pkg_hash,[
+ {<<"certifi">>, <<"A7966EFB868B179023618D29A407548F70C52466BF1849B9E8EBD0E34B7EA11F">>},
+ {<<"erlsom">>, <<"53DBACF35ADFEA6F0714FD0E4A7B0720D495E88C5E24E12C5DC88C7B62BD3E49">>},
+ {<<"hackney">>, <<"DDD22D42DB2B50E6A155439C8811B8F6DF61A4395DE10509714AD2751C6DA817">>},
+ {<<"idna">>, <<"AC62EE99DA068F43C50DC69ACF700E03A62A348360126260E87F2B54ECED86B2">>},
+ {<<"jsx">>, <<"749BEC6D205C694AE1786D62CEA6CC45A390437E24835FD16D12D74F07097727">>},
+ {<<"metrics">>, <<"25F094DEA2CDA98213CECC3AEFF09E940299D950904393B2A29D191C346A8486">>},
+ {<<"mimerl">>, <<"993F9B0E084083405ED8252B99460C4F0563E41729AB42D9074FD5E52439BE88">>},
+ {<<"mochiweb_util">>, <<"ECD20D44C6A8E19D1D6E5FE6921E55E921DA6E42F8757A00FF901C7AD4DC5D3D">>},
+ {<<"ssl_verify_fun">>, <<"EDEE20847C42E379BF91261DB474FFBE373F8ACB56E9079ACB6038D4E0BF414F">>}]}
+].
