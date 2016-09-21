@@ -1,4 +1,4 @@
-[![Hex.pm](https://img.shields.io/hexpm/v/restclient.svg?maxAge=2592000)](https://hex.pm/packages/restclient) restclient -- An erlang REST Client library
+[![Hex.pm](https://img.shields.io/hexpm/v/restc.svg?maxAge=2592000)](https://hex.pm/packages/restc) restclient -- An erlang REST Client library
 ====================================
 
 ## DESCRIPTION
