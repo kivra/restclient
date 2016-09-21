@@ -1,4 +1,4 @@
-restclient -- An erlang REST Client library
+[![Hex.pm](https://img.shields.io/hexpm/v/restclient.svg?maxAge=2592000)](https://hex.pm/packages/restclient) restclient -- An erlang REST Client library
 ====================================
 
 ## DESCRIPTION
@@ -11,7 +11,7 @@ function for working with urls and query parameters.
 
 Include restclient as a rebar dependency with:
 
-	{deps, [{restc, ".*", {git, "git://github.com/kivra/restclient.git", {tag, "0.3.3"}}}]}.
+	{deps, [{restc, ".*", {git, "git://github.com/kivra/restclient.git", {tag, "0.3.4"}}}]}.
 
 You have to start inets before using the client and if you want to use https make sure to start ssl before.
 Then you can use the client as:
