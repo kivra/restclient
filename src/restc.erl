@@ -169,11 +169,11 @@ parse_response({ok, 204, Headers, Client}) ->
     ok = hackney:close(Client),
     {ok, 204, Headers, []};
 parse_response({ok, Status, Headers, Client}) ->
-    Type = proplists:get_value(<<"Content-Type">>, Headers, ?DEFAULT_CTYPE),
-    Type2 = parse_type(Type),
-    {ok, Body} = hackney:body(Client),
-    Body2 = parse_body(Type2, Body),
-    {ok, Status, Headers, Body2};
+    Type = parse_type(get_key(<<"Content-Type">>, Headers, ?DEFAULT_CTYPE)),
+    case hackney:body(Client) of
+        {ok, Body}   -> {ok, Status, Headers, parse_body(Type, Body)};
+        {error, _}=E -> E
+    end;
 parse_response({error, Type}) ->
     {error, Type}.
 
@@ -181,6 +181,12 @@ parse_type(Type) ->
     case binary:split(Type, <<";">>) of
         [CType, _] -> CType;
         _ -> Type
+    end.
+
+get_key(Key, Obj, Def) ->
+    case lists:keyfind(Key, 1, Obj) of
+        false      -> Def;
+        {Key, Val} -> Val
     end.
 
 parse_body(_, <<>>)                      -> [];
