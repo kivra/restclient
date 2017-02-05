@@ -57,6 +57,22 @@
 -define(DEFAULT_ENCODING, json).
 -define(DEFAULT_CTYPE, <<"application/json">>).
 
+-export_type([
+     method/0
+    ,url/0
+    ,headers/0
+    ,header/0
+    ,options/0
+    ,option/0
+    ,querys/0
+    ,qry/0
+    ,status_codes/0
+    ,status_code/0
+    ,reason/0
+    ,content_type/0
+    ,body/0
+    ,response/0
+]).
 
 %%% API ========================================================================
 
