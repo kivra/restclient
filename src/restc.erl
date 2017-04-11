@@ -110,13 +110,22 @@ request(Method, Type, Url, Expect, Headers, Body, Options) ->
     AccessType = get_accesstype(Type),
     Headers1 = [{<<"Accept">>, <<AccessType/binary, ", */*;q=0.9">>} | Headers],
     Headers2 = [{<<"Content-Type">>, get_ctype(Type)} | Headers1],
-    Response = parse_response(do_request(Method, Type, Url, Headers2, Body, Options)),
+    Retries = proplists:get_value(retries, Options, 0),
+    request_loop(Method, Type, Url, Expect, Headers2, Body, Options, Retries).
+
+request_loop(Method, Type, Url, Expect, Headers, Body, Options, Retries) ->
+    Response = parse_response(do_request(Method, Type, Url, Headers, Body, Options)),
     case Response of
         {ok, Status, H, B} ->
             case check_expect(Status, Expect) of
                 true -> Response;
-                false -> {error, Status, H, B}
+                false when Retries > 0 ->
+                    request_loop(Method, Type, Url, Expect, Headers, Body, Options, Retries-1);
+                false ->
+                    {error, Status, H, B}
             end;
+        _Error when Retries > 0 ->
+            request_loop(Method, Type, Url, Expect, Headers, Body, Options, Retries-1);
         Error ->
             Error
     end.
