@@ -11,43 +11,60 @@ function for working with urls and query parameters.
 
 Include restclient as a rebar dependency with:
 
-	{deps, [{restc, ".*", {git, "git://github.com/kivra/restclient.git", {tag, "0.3.8"}}}]}.
+	{deps, [{restc, ".*", {git, "git://github.com/kivra/restclient.git", {tag, "0.4.0"}}}]}.
 
 You have to start inets before using the client and if you want to use https make sure to start ssl before.
 Then you can use the client as:
 
 ``` erlang
-	Erlang R15B (erts-5.9) [source] [64-bit] [smp:8:8] [async-threads:0] [hipe] [kernel-poll:false]
+Erlang/OTP 19 [erts-8.2] [source] [64-bit] [smp:8:8] [async-threads:0] [kernel-poll:false]
 
-	Eshell V5.9  (abort with ^G)
-	1> application:start(inets).
-	ok
-	2> application:start(crypto).
-	ok
-	3> application:start(public_key).
-	ok
-	4> application:start(ssl).
-	ok
-	5> restc:request(get, "https://api.github.com").
-	{ok,204,
-	    [{"connection","keep-alive"},
-	     {"date","Thu, 15 Mar 2012 22:32:47 GMT"},
-	     {"etag","\"d41d8cd98f00b204e9800998ecf8427e\""},
-	     {"server","nginx/1.0.13"},
-	     {"status","204 No Content"},
-	     {"x-ratelimit-limit","5000"},
-	     {"x-ratelimit-remaining","4992"}],
-	    []}
-	6> restc:request(get, "https://api.github.com", [200]).
-	{error,204,
-	    [{"connection","keep-alive"},
-	     {"date","Thu, 15 Mar 2012 22:32:47 GMT"},
-	     {"etag","\"d41d8cd98f00b204e9800998ecf8427e\""},
-	     {"server","nginx/1.0.13"},
-	     {"status","204 No Content"},
-	     {"x-ratelimit-limit","5000"},
-	     {"x-ratelimit-remaining","4992"}],
-	    []}
+Eshell V8.2  (abort with ^G)
+1> application:ensure_all_started(restc).
+{ok,[idna,mimerl,certifi,ssl_verify_fun,metrics,hackney,
+     mochiweb_util,restc]}
+
+2> restc:request(get, "https://api.github.com").
+{ok,200,
+    [{<<"Server">>,<<"GitHub.com">>},
+     {<<"Date">>,<<"Thu, 11 May 2017 07:36:16 GMT">>},
+     {<<"Content-Type">>,<<"application/json; charset=utf-8">>},
+     {<<"Content-Length">>,<<"2039">>},
+     {<<"Status">>,<<"200 OK">>},
+     {<<"X-GitHub-Req"...>>,<<"8E05:5C9"...>>}],
+    [{<<"current_user_url">>,<<"https://api.github.com/user">>},
+     {<<"current_user_authorizations_html_url">>,
+      <<"https://github.com/settings/connections/applications{/client_id}">>},
+     {<<"authorizations_url">>,
+      <<"https://api.github.com/authorizations">>},
+     {<<...>>,...},
+     {...}|...]}
+3> restc:request(get, "https://api.github.com/herp-derp-404", [200]).
+{error,404,
+       [{<<"Server">>,<<"GitHub.com">>},
+        {<<"Date">>,<<"Thu, 11 May 2017 07:37:27 GMT">>},
+        {<<"Content-Type">>,<<"application/json; charset=utf-8">>},
+        {<<"Content-Length">>,<<"77">>},
+        {<<"Status">>,<<"404 Not Found">>},
+        {<<"X-RateLimit-Limit">>,<<"60">>},
+        {<<"X-RateLimit-Remaining">>,<<"56">>},
+        {<<"X-RateLimit-Reset">>,<<"1494491776">>},
+        {<<"X-GitHub-Media-Type">>,<<"github.v3">>},
+        {<<"Access-Control-Expose-Headers">>,
+         <<"ETag, Link, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit"...>>},
+        {<<"Access-Control-Allow-Origin">>,<<"*">>},
+        {<<"Content-Security-Policy">>,<<"default-src 'none'">>},
+        {<<"Strict-Transport-Security">>,
+         <<"max-age=31536000; includeSubdomains; preload">>},
+        {<<"X-Content-Type-Options">>,<<"nosniff">>},
+        {<<"X-Frame-Options">>,<<"deny">>},
+        {<<"X-XSS-Protection">>,<<"1; mode=block">>},
+        {<<"X-GitHub-Request-Id">>,
+         <<"8C1D:5C90:54F34B8:6C6FF4D:59"...>>}],
+       [{<<"message">>,<<"Not Found">>},
+        {<<"documentation_url">>,
+         <<"https://developer.github.com/v3">>}]}
+
 ```
 
 There's also convenience functions for working with urls and query string:
