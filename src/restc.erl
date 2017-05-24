@@ -37,7 +37,7 @@
 -export([construct_url/2]).
 -export([construct_url/3]).
 
--type method()       :: binary | head | get | put | patch | post | trace | options | delete.
+-type method()       :: head | get | put | patch | post | trace | options | delete.
 -type url()          :: binary() | string().
 -type headers()      :: [header()].
 -type header()       :: {binary(), binary()}.
