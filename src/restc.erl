@@ -167,9 +167,7 @@ encode_body(json, Body) ->
 encode_body(percent, Body) ->
     mochiweb_util:urlencode(Body);
 encode_body(xml, Body) ->
-    lists:flatten(xmerl:export_simple(Body, xmerl_xml));
-encode_body(_, Body) ->
-    encode_body(?DEFAULT_ENCODING, Body).
+    lists:flatten(xmerl:export_simple(Body, xmerl_xml)).
 
 urlunsplit(S, N, P, Query) ->
     Q = mochiweb_util:urlencode(Query),
