@@ -154,7 +154,7 @@ do_request(put, Type, Url, Headers, Body, Options) ->
 do_request(patch, Type, Url, Headers, Body, Options) ->
     Body2 = encode_body(Type, Body),
     hackney:request(patch, Url, Headers, Body2, Options);
-do_request(Method, _, Url, Headers, _, Options) ->
+do_request(Method, _, Url, Headers, _, Options) when is_atom(Method) ->
     hackney:request(Method, Url, Headers, [], Options).
 
 check_expect(_Status, []) ->
