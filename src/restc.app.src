@@ -25,7 +25,7 @@
 %%
 %% ----------------------------------------------------------------------------
 {application, restc, [ {description,  "Erlang Rest Client"}
-                     , {vsn,          "0.4.0"}
+                     , {vsn,          "0.4.1"}
                      , {applications, [ kernel
                                       , stdlib
                                       , asn1
