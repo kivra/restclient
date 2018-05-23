@@ -131,13 +131,20 @@ request_loop(Method, Type, Url, Expect, Headers, Body, Options, Retries) ->
     end.
 
 -spec construct_url(FullPath::url(), Query::querys()) -> Url::url().
-construct_url(FullPath, Query) ->
+construct_url(FullPath, Query) when is_binary(FullPath) ->
+    construct_url(binary_to_list(FullPath), Query);
+construct_url(FullPath, Query) when is_list(FullPath) ->
     {S, N, P, _, _} = mochiweb_util:urlsplit(FullPath),
     Q = mochiweb_util:urlencode(Query),
     mochiweb_util:urlunsplit({S, N, P, Q, []}).
 
 -spec construct_url(FullPath::url(), Path::url(), Query::querys()) -> Url::url().
-construct_url(SchemeNetloc, Path, Query) ->
+construct_url(SchemeNetloc, Path, Query) when is_binary(SchemeNetloc) ->
+    construct_url(binary_to_list(SchemeNetloc), Path, Query);
+construct_url(SchemeNetloc, Path, Query) when is_binary(Path) ->
+    construct_url(SchemeNetloc, binary_to_list(Path), Query);
+construct_url(SchemeNetloc, Path, Query) when is_list(SchemeNetloc),
+                                              is_list(Path) ->
     {S, N, P1, _, _} = mochiweb_util:urlsplit(SchemeNetloc),
     {_, _, P2, _, _} = mochiweb_util:urlsplit(Path),
     P = path_cat(P1, P2),
