@@ -55,7 +55,7 @@
                         {error, Reason::reason()}.
 
 -define(DEFAULT_ENCODING, json).
--define(DEFAULT_CTYPE, <<"application/json">>).
+-define(DEFAULT_CTYPE, <<"text/plain">>).
 
 -export_type([
      method/0
@@ -199,7 +199,7 @@ parse_response({ok, 204, Headers, Client}) ->
     ok = hackney:close(Client),
     {ok, 204, Headers, []};
 parse_response({ok, Status, Headers, Client}) ->
-    Type = parse_type(get_key(<<"Content-Type">>, Headers, ?DEFAULT_CTYPE)),
+    Type = parse_type(get_key(<<"content-type">>, Headers, ?DEFAULT_CTYPE)),
     case hackney:body(Client) of
         {ok, Body}   -> {ok, Status, Headers, parse_body(Type, Body)};
         {error, _}=E -> E
