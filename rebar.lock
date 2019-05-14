@@ -1,22 +1,26 @@
 {"1.1.0",
-[{<<"certifi">>,{pkg,<<"certifi">>,<<"0.7.0">>},1},
- {<<"erlsom">>,{pkg,<<"erlsom">>,<<"1.4.1">>},0},
- {<<"hackney">>,{pkg,<<"hackney">>,<<"1.6.5">>},0},
- {<<"idna">>,{pkg,<<"idna">>,<<"1.2.0">>},1},
- {<<"jsx">>,{pkg,<<"jsx">>,<<"2.8.0">>},0},
+[{<<"certifi">>,{pkg,<<"certifi">>,<<"2.5.1">>},1},
+ {<<"erlsom">>,{pkg,<<"erlsom">>,<<"1.5.0">>},0},
+ {<<"hackney">>,{pkg,<<"hackney">>,<<"1.15.1">>},0},
+ {<<"idna">>,{pkg,<<"idna">>,<<"6.0.0">>},1},
+ {<<"jsx">>,{pkg,<<"jsx">>,<<"2.9.0">>},0},
  {<<"metrics">>,{pkg,<<"metrics">>,<<"1.0.1">>},1},
- {<<"mimerl">>,{pkg,<<"mimerl">>,<<"1.0.2">>},1},
+ {<<"mimerl">>,{pkg,<<"mimerl">>,<<"1.2.0">>},1},
  {<<"mochiweb_util">>,{pkg,<<"mochiweb_util">>,<<"0.1.0">>},0},
- {<<"ssl_verify_fun">>,{pkg,<<"ssl_verify_fun">>,<<"1.1.1">>},1}]}.
+ {<<"parse_trans">>,{pkg,<<"parse_trans">>,<<"3.3.0">>},2},
+ {<<"ssl_verify_fun">>,{pkg,<<"ssl_verify_fun">>,<<"1.1.4">>},1},
+ {<<"unicode_util_compat">>,{pkg,<<"unicode_util_compat">>,<<"0.4.1">>},2}]}.
 [
 {pkg_hash,[
- {<<"certifi">>, <<"861A57F3808F7EB0C2D1802AFEAAE0FA5DE813B0DF0979153CBAFCD853ABABAF">>},
- {<<"erlsom">>, <<"53DBACF35ADFEA6F0714FD0E4A7B0720D495E88C5E24E12C5DC88C7B62BD3E49">>},
- {<<"hackney">>, <<"8C025EE397AC94A184B0743C73B33B96465E85F90A02E210E86DF6CBAFAA5065">>},
- {<<"idna">>, <<"AC62EE99DA068F43C50DC69ACF700E03A62A348360126260E87F2B54ECED86B2">>},
- {<<"jsx">>, <<"749BEC6D205C694AE1786D62CEA6CC45A390437E24835FD16D12D74F07097727">>},
+ {<<"certifi">>, <<"867CE347F7C7D78563450A18A6A28A8090331E77FA02380B4A21962A65D36EE5">>},
+ {<<"erlsom">>, <<"C5A5CDD0EE0E8DCA62BCC4B13FF08DA24FDEFC16CCD8B25282A2FDA2BA1BE24A">>},
+ {<<"hackney">>, <<"9F8F471C844B8CE395F7B6D8398139E26DDCA9EBC171A8B91342EE15A19963F4">>},
+ {<<"idna">>, <<"689C46CBCDF3524C44D5F3DDE8001F364CD7608A99556D8FBD8239A5798D4C10">>},
+ {<<"jsx">>, <<"D2F6E5F069C00266CAD52FB15D87C428579EA4D7D73A33669E12679E203329DD">>},
  {<<"metrics">>, <<"25F094DEA2CDA98213CECC3AEFF09E940299D950904393B2A29D191C346A8486">>},
- {<<"mimerl">>, <<"993F9B0E084083405ED8252B99460C4F0563E41729AB42D9074FD5E52439BE88">>},
+ {<<"mimerl">>, <<"67E2D3F571088D5CFD3E550C383094B47159F3EEE8FFA08E64106CDF5E981BE3">>},
  {<<"mochiweb_util">>, <<"ECD20D44C6A8E19D1D6E5FE6921E55E921DA6E42F8757A00FF901C7AD4DC5D3D">>},
- {<<"ssl_verify_fun">>, <<"28A4D65B7F59893BC2C7DE786DEC1E1555BD742D336043FE644AE956C3497FBE">>}]}
+ {<<"parse_trans">>, <<"09765507A3C7590A784615CFD421D101AEC25098D50B89D7AA1D66646BC571C1">>},
+ {<<"ssl_verify_fun">>, <<"F0EAFFF810D2041E93F915EF59899C923F4568F4585904D010387ED74988E77B">>},
+ {<<"unicode_util_compat">>, <<"D869E4C68901DD9531385BB0C8C40444EBF624E60B6962D95952775CAC5E90CD">>}]}
 ].
