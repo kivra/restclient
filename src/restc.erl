@@ -107,7 +107,8 @@ request(Method, Type, Url, Expect, Headers, Body) ->
 -spec request(Method::method(), Type::content_type(), Url::url(),
     Expect::status_codes(), Headers::headers(), Body::body(), Options::options()) -> Response::response().
 request(Method, Type, Url, Expect, Headers0, Body, Options) ->
-    Headers = lists:usort([ accept(Headers0, Type), content_type(Headers0, Type) | Headers0]),
+    Headers1 = normalize_headers(Headers0),
+    Headers = lists:usort([ accept(Headers1, Type), content_type(Headers1, Type) | Headers1]),
     Retries = proplists:get_value(retries, Options, 0),
     request_loop(Method, Type, Url, Expect, Headers, Body, Options, Retries).
 
@@ -149,24 +150,29 @@ construct_url(SchemeNetloc, Path, Query) when is_list(SchemeNetloc),
     urlunsplit(S, N, P, Query).
 
 %%% INTERNAL ===================================================================
+normalize_headers(Headers) ->
+    lists:map(fun({Key, Val}) ->
+                      {string:to_lower(Key), Val}
+              end, Headers).
+
 accept(Headers, Type) ->
-    case lists:keyfind(<<"Accept">>, 1, Headers) of
-        {<<"Accept">>, Accept} -> {<<"Accept">>, Accept};
+    case lists:keyfind(<<"accept">>, 1, Headers) of
+        {<<"accept">>, Accept} -> {<<"accept">>, Accept};
         false -> default_accept(Type)
     end.
 
 default_accept(Type) ->
     AccessType = get_accesstype(Type),
-    {<<"Accept">>, <<AccessType/binary, ", */*;q=0.9">>}.
+    {<<"accept">>, <<AccessType/binary, ", */*;q=0.9">>}.
 
 content_type(Headers, Type) ->
-        case lists:keyfind(<<"Content-Type">>, 1, Headers) of
-        {<<"Content-Type">>, ContentType} -> {<<"Content-Type">>, ContentType};
+    case lists:keyfind(<<"content-type">>, 1, Headers) of
+        {<<"content-type">>, ContentType} -> {<<"content-type">>, ContentType};
         false -> default_content_type(Type)
     end.
 
 default_content_type(Type) ->
-    {<<"Content-Type">>, get_ctype(Type)}.
+    {<<"content-type">>, get_ctype(Type)}.
 
 do_request(post, Type, Url, Headers, Body, Options) ->
     Body2 = encode_body(Type, Body),
