@@ -79,25 +79,25 @@
 
 -spec request(Url::url()) -> Response::response().
 request(Url) ->
-    request(get, ?DEFAULT_ENCODING, Url, [], [], [], []).
+    request(get, Url).
 
 -spec request(Method::method(), Url::url()) -> Response::response().
 request(Method, Url) ->
-    request(Method, ?DEFAULT_ENCODING, Url, [], [], [], []).
+    request(Method, Url, []).
 
 -spec request(Method::method(), Url::url(), Expect::status_codes()) -> Response::response().
 request(Method, Url, Expect) ->
-    request(Method, ?DEFAULT_ENCODING, Url, Expect, [], [], []).
+    request(Method, ?DEFAULT_ENCODING, Url, Expect).
 
 -spec request(Method::method(), Type::content_type(), Url::url(),
               Expect::status_codes()) -> Response::response().
 request(Method, Type, Url, Expect) ->
-    request(Method, Type, Url, Expect, [], [], []).
+    request(Method, Type, Url, Expect, []).
 
 -spec request(Method::method(), Type::content_type(), Url::url(),
               Expect::status_codes(), Headers::headers()) -> Response::response().
 request(Method, Type, Url, Expect, Headers) ->
-    request(Method, Type, Url, Expect, Headers, [], []).
+    request(Method, Type, Url, Expect, Headers, []).
 
 -spec request(Method::method(), Type::content_type(), Url::url(),
               Expect::status_codes(), Headers::headers(), Body::body()) -> Response::response().
@@ -106,12 +106,11 @@ request(Method, Type, Url, Expect, Headers, Body) ->
 
 -spec request(Method::method(), Type::content_type(), Url::url(),
     Expect::status_codes(), Headers::headers(), Body::body(), Options::options()) -> Response::response().
-request(Method, Type, Url, Expect, Headers, Body, Options) ->
-    AccessType = get_accesstype(Type),
-    Headers1 = [{<<"Accept">>, <<AccessType/binary, ", */*;q=0.9">>} | Headers],
-    Headers2 = [{<<"Content-Type">>, get_ctype(Type)} | Headers1],
+request(Method, Type, Url, Expect, Headers0, Body, Options) ->
+    Headers1 = normalize_headers(Headers0),
+    Headers = lists:usort([ accept(Headers1, Type), content_type(Headers1, Type) | Headers1]),
     Retries = proplists:get_value(retries, Options, 0),
-    request_loop(Method, Type, Url, Expect, Headers2, Body, Options, Retries).
+    request_loop(Method, Type, Url, Expect, Headers, Body, Options, Retries).
 
 request_loop(Method, Type, Url, Expect, Headers, Body, Options, Retries) ->
     Response = parse_response(do_request(Method, Type, Url, Headers, Body, Options)),
@@ -151,6 +150,29 @@ construct_url(SchemeNetloc, Path, Query) when is_list(SchemeNetloc),
     urlunsplit(S, N, P, Query).
 
 %%% INTERNAL ===================================================================
+normalize_headers(Headers) ->
+    lists:map(fun({Key, Val}) ->
+                      {string:to_lower(Key), Val}
+              end, Headers).
+
+accept(Headers, Type) ->
+    case lists:keyfind(<<"accept">>, 1, Headers) of
+        {<<"accept">>, Accept} -> {<<"accept">>, Accept};
+        false -> default_accept(Type)
+    end.
+
+default_accept(Type) ->
+    AccessType = get_accesstype(Type),
+    {<<"accept">>, <<AccessType/binary, ", */*;q=0.9">>}.
+
+content_type(Headers, Type) ->
+    case lists:keyfind(<<"content-type">>, 1, Headers) of
+        {<<"content-type">>, ContentType} -> {<<"content-type">>, ContentType};
+        false -> default_content_type(Type)
+    end.
+
+default_content_type(Type) ->
+    {<<"content-type">>, get_ctype(Type)}.
 
 do_request(post, Type, Url, Headers, Body, Options) ->
     Body2 = encode_body(Type, Body),
@@ -236,4 +258,3 @@ get_ctype(json)    -> <<"application/json">>;
 get_ctype(xml)     -> <<"application/xml">>;
 get_ctype(percent) -> <<"application/x-www-form-urlencoded">>;
 get_ctype(_)       -> get_ctype(?DEFAULT_ENCODING).
-
