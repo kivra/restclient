@@ -152,7 +152,7 @@ construct_url(SchemeNetloc, Path, Query) when is_list(SchemeNetloc),
 %%% INTERNAL ===================================================================
 normalize_headers(Headers) ->
     lists:map(fun({Key, Val}) ->
-                      {string:to_lower(Key), Val}
+                      {string:lowercase(Key), Val}
               end, Headers).
 
 accept(Headers, Type) ->
