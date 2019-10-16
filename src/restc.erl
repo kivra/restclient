@@ -48,7 +48,7 @@
 -type status_codes() :: [status_code()].
 -type status_code()  :: integer().
 -type reason()       :: term().
--type content_type() :: json | xml | percent.
+-type content_type() :: json | xml | percent | png.
 -type body()         :: binary() | jsx:json_term() | erlsom:simple_form().
 -type response()     :: {ok, Status::status_code(), Headers::headers(), Body::body()} |
                         {error, Status::status_code(), Headers::headers(), Body::body()} |
@@ -222,6 +222,8 @@ parse_response({ok, 204, Headers, Client}) ->
     {ok, 204, Headers, []};
 parse_response({ok, Status, Headers, Client}) ->
     Type = parse_type(get_key(<<"Content-Type">>, Headers, ?DEFAULT_CTYPE)),
+    erlang:display("le type"),
+    erlang:display(Type),
     case hackney:body(Client) of
         {ok, Body}   -> {ok, Status, Headers, parse_body(Type, Body)};
         {error, _}=E -> E
