@@ -222,7 +222,8 @@ parse_response({ok, 204, Headers, Client}) ->
     {ok, 204, Headers, []};
 parse_response({ok, Status, Headers, Client}) ->
     NormalizedHeaders = normalize_headers(Headers),
-    Type = parse_type(get_key(<<"content-type">>, NormalizedHeaders, ?DEFAULT_CTYPE)),
+    ContentType = content_type(NormalizedHeaders, ?DEFAULT_ENCODING),
+    Type = parse_type(ContentType),
     case hackney:body(Client) of
         {ok, Body}   -> {ok, Status, Headers, parse_body(Type, Body)};
         {error, _}=E -> E
@@ -234,12 +235,6 @@ parse_type(Type) ->
     case binary:split(Type, <<";">>) of
         [CType, _] -> CType;
         _ -> Type
-    end.
-
-get_key(Key, Obj, Def) ->
-    case lists:keyfind(Key, 1, Obj) of
-        false      -> Def;
-        {Key, Val} -> Val
     end.
 
 parse_body(_, <<>>)                      -> [];
