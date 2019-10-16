@@ -221,11 +221,7 @@ parse_response({ok, 204, Headers, Client}) ->
     ok = hackney:close(Client),
     {ok, 204, Headers, []};
 parse_response({ok, Status, Headers, Client}) ->
-    erlang:display("le corps"),
-    erlang:display(Headers),
-    Type = parse_type(get_key(<<"Content-Type">>, Headers, ?DEFAULT_CTYPE)),
-    erlang:display("le type"),
-    erlang:display(Type),
+    Type = parse_type(get_header(<<"Content-Type">>, Headers, ?DEFAULT_CTYPE)),
     case hackney:body(Client) of
         {ok, Body}   -> {ok, Status, Headers, parse_body(Type, Body)};
         {error, _}=E -> E
@@ -239,9 +235,20 @@ parse_type(Type) ->
         _ -> Type
     end.
 
+get_header(Header, Headers, Default) ->
+    NormalizedHeaders = lists:keymap(fun normalize_header/1, 1, Headers),
+    get_key(Header, NormalizedHeaders, Default).
+
+normalize_header(Header) ->
+    HeaderAsString = binary_to_list(Header),
+    Parts = string:split(HeaderAsString, "-"),
+    Normalized = lists:map(fun(Part) -> string:titlecase(Part) end, Parts),
+    Joined = string:join(Normalized, "-"),
+    list_to_binary(Joined).
+
 get_key(Key, Obj, Def) ->
     case lists:keyfind(Key, 1, Obj) of
-        false      -> erlang:display("voila le def"), Def;
+        false      -> Def;
         {Key, Val} -> Val
     end.
 
@@ -265,3 +272,43 @@ get_ctype(xml)     -> <<"application/xml">>;
 get_ctype(percent) -> <<"application/x-www-form-urlencoded">>;
 get_ctype(png)     -> <<"image/png">>;
 get_ctype(_)       -> get_ctype(?DEFAULT_ENCODING).
+
+%%%_* Tests ============================================================
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+%% Given, when, then
+headers_in_uppercase__getting_header__value_is_returned__test() ->
+    Headers = [{<<"Content-Type">>,<<"image/png">>}, {<<"X-Correlation-ID">>,<<"K-932f0b8edbca412fb8dcf16b39203dac">>}],
+    ExpectedResult = <<"image/png">>,
+
+    Result = get_header(<<"Content-Type">>, Headers, <<>>),
+
+    ?assertEqual(ExpectedResult, Result).
+
+headers_in_lowercase__getting_header__value_is_returned__test() ->
+    Headers = [{<<"content-type">>,<<"image/png">>}, {<<"x-correlation-ID">>,<<"K-932f0b8edbca412fb8dcf16b39203dac">>}],
+    ExpectedResult = <<"image/png">>,
+
+    Result = get_header(<<"Content-Type">>, Headers, <<>>),
+
+    ?assertEqual(ExpectedResult, Result).
+
+header_without_hyphen__getting_header__value_is_returned__test() ->
+    Headers = [{<<"Accept">>,<<"image/png">>}],
+    ExpectedResult = <<"image/png">>,
+
+    Result = get_header(<<"Accept">>, Headers, <<>>),
+
+    ?assertEqual(ExpectedResult, Result).
+
+header_not_present__getting_header__default_value_is_returned__test() ->
+    Headers = [{<<"X-Correlation-ID">>,<<"K-932f0b8edbca412fb8dcf16b39203dac">>}],
+    DefaultValue = <<"application/json">>,
+    ExpectedResult = <<"application/json">>,
+
+    Result = get_header(<<"Content-Type">>, Headers, DefaultValue),
+
+    ?assertEqual(ExpectedResult, Result).
+
+-endif.
