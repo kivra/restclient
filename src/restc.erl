@@ -221,6 +221,8 @@ parse_response({ok, 204, Headers, Client}) ->
     ok = hackney:close(Client),
     {ok, 204, Headers, []};
 parse_response({ok, Status, Headers, Client}) ->
+    erlang:display("le corps"),
+    erlang:display(Headers),
     Type = parse_type(get_key(<<"Content-Type">>, Headers, ?DEFAULT_CTYPE)),
     erlang:display("le type"),
     erlang:display(Type),
@@ -239,7 +241,7 @@ parse_type(Type) ->
 
 get_key(Key, Obj, Def) ->
     case lists:keyfind(Key, 1, Obj) of
-        false      -> Def;
+        false      -> erlang:display("voila le def"), Def;
         {Key, Val} -> Val
     end.
 
