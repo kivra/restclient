@@ -222,7 +222,7 @@ parse_response({ok, 204, Headers, Client}) ->
     {ok, 204, Headers, []};
 parse_response({ok, Status, Headers, Client}) ->
     NormalizedHeaders = normalize_headers(Headers),
-    ContentType = content_type(NormalizedHeaders, ?DEFAULT_CTYPE),
+    {<<"content-type">>, ContentType} = content_type(NormalizedHeaders, ?DEFAULT_CTYPE),
     Type = parse_type(ContentType),
     case hackney:body(Client) of
         {ok, Body}   -> {ok, Status, Headers, parse_body(Type, Body)};
