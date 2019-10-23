@@ -8,3 +8,4 @@ erl_crash.dump
 .erlang.mk
 _build
 *.crashdump
+*.beam
