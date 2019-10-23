@@ -1,0 +1,27 @@
+name: Erlang CI
+
+on: [push]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    container:
+      image: erlang:22.0.7
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Compile
+      run: rebar3 compile
+    - name: Run tests
+      run: rebar3 do ct
+
+on:
+  pull_request:
+    branches:
+    - master
+  push:
+    branches:
+    - master
