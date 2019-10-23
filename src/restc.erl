@@ -48,7 +48,7 @@
 -type status_codes() :: [status_code()].
 -type status_code()  :: integer().
 -type reason()       :: term().
--type content_type() :: json | xml | percent.
+-type content_type() :: json | xml | percent | png.
 -type body()         :: binary() | jsx:json_term() | erlsom:simple_form().
 -type response()     :: {ok, Status::status_code(), Headers::headers(), Body::body()} |
                         {error, Status::status_code(), Headers::headers(), Body::body()} |
@@ -221,7 +221,9 @@ parse_response({ok, 204, Headers, Client}) ->
     ok = hackney:close(Client),
     {ok, 204, Headers, []};
 parse_response({ok, Status, Headers, Client}) ->
-    Type = parse_type(get_key(<<"Content-Type">>, Headers, ?DEFAULT_CTYPE)),
+    NormalizedHeaders = normalize_headers(Headers),
+    {<<"content-type">>, ContentType} = content_type(NormalizedHeaders, ?DEFAULT_CTYPE),
+    Type = parse_type(ContentType),
     case hackney:body(Client) of
         {ok, Body}   -> {ok, Status, Headers, parse_body(Type, Body)};
         {error, _}=E -> E
@@ -235,26 +237,23 @@ parse_type(Type) ->
         _ -> Type
     end.
 
-get_key(Key, Obj, Def) ->
-    case lists:keyfind(Key, 1, Obj) of
-        false      -> Def;
-        {Key, Val} -> Val
-    end.
-
 parse_body(_, <<>>)                      -> [];
 parse_body(<<"application/json">>, Body) -> jsx:decode(Body);
 parse_body(<<"application/xml">>, Body)  ->
     {ok, Data, _} = erlsom:simple_form(binary_to_list(Body)),
     Data;
-parse_body(<<"text/xml">>, Body) -> parse_body(<<"application/xml">>, Body);
-parse_body(_, Body)          -> Body.
+parse_body(<<"text/xml">>, Body)  -> parse_body(<<"application/xml">>, Body);
+parse_body(<<"image/png">>, Body) -> Body;
+parse_body(_, Body)               -> Body.
 
 get_accesstype(json)    -> <<"application/json">>;
 get_accesstype(xml)     -> <<"application/xml">>;
 get_accesstype(percent) -> <<"application/json">>;
+get_accesstype(png)     -> <<"image/png">>;
 get_accesstype(_)       -> get_ctype(?DEFAULT_ENCODING).
 
 get_ctype(json)    -> <<"application/json">>;
 get_ctype(xml)     -> <<"application/xml">>;
 get_ctype(percent) -> <<"application/x-www-form-urlencoded">>;
+get_ctype(png)     -> <<"image/png">>;
 get_ctype(_)       -> get_ctype(?DEFAULT_ENCODING).
