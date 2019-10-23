@@ -68,7 +68,7 @@
 -define(DEFAULT_ENCODING, json).
 -define(DEFAULT_CTYPE, <<"application/json">>).
 
--export_type([method/0
+-export_type([ method/0
              , url/0
              , headers/0
              , header/0
