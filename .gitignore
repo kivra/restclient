@@ -9,3 +9,4 @@ erl_crash.dump
 _build
 *.crashdump
 *.beam
+.elvis
