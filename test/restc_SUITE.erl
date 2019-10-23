@@ -254,8 +254,9 @@ type_is_png__making_request_with_no_headers__accept_header_is_png(_Config) ->
 
 type_is_json__making_request_with_xml_accept_header__accept_header_overrides_type(_Config) ->
   mock_hackney_success(200),
-
-  restc:request(get, json, <<"http://any_url.com">>, [200], [{<<"Accept">>, <<"application/xml">>}]),
+  Uri = <<"http://any_url.com">>,
+  Headers = [{<<"Accept">>, <<"application/xml">>}],
+  restc:request(get, json, Uri, [200], Headers),
 
   ActualHeaders = meck:capture(first, hackney, request, '_', 3, '_'),
   ?assertMatch([{<<"accept">>, <<"application/xml", _/binary>>}, _], ActualHeaders).
@@ -272,7 +273,8 @@ mock_hackney_error(Error) ->
 
 mock_hackney_eventual_success(Code, AmountOfErrors) ->
   ErrorCalls = error_calls(AmountOfErrors),
-  meck:expect(hackney, request, ['_', '_', '_', '_', '_'], meck:seq(ErrorCalls ++ [{ok, Code, [], client}])),
+  meck:expect(hackney, request, ['_', '_', '_', '_', '_'],
+              meck:seq(ErrorCalls ++ [{ok, Code, [], client}])),
   meck:expect(hackney, body, fun(client) -> {ok, <<>>} end).
 
 error_calls(0) -> [];
