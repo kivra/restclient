@@ -24,7 +24,14 @@
                      (C >= $A andalso C =< $Z) orelse
                      (C >= $0 andalso C =< $9) orelse
                      (C =:= ?FULLSTOP orelse C =:= $- orelse C =:= $~ orelse
-                      C =:= $_))).
+                      C =:= $_
+                      %% Make it more RFC3986 complaint
+                      %%sub-delims that hackney whitelists
+                      orelse C =:= $! orelse C =:= $$ orelse C =:= $(
+                      orelse C =:= $) orelse C =:= $*
+                      %% Other valid chars
+                      orelse C =:= $@
+                     ))).
 
 hexdigit(C) when C < 10 -> $0 + C;
 hexdigit(C) when C < 16 -> $A + (C - 10).
