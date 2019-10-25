@@ -234,7 +234,7 @@ encode_body(json, Body) ->
   jsx:encode(Body);
 encode_body(percent, Body) ->
   lists:map(fun({K, V}) ->
-                {list_to_binary(K), list_to_binary(V)}
+                {to_binary(K), to_binary(V)}
             end, Body),
   binary_to_list(hackney_url:qs(Body, []));
 encode_body(xml, Body) ->
