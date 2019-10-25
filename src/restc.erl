@@ -2,7 +2,7 @@
 %%
 %% restc: Erlang Rest Client
 %%
-%% Copyright (c) 2012-2014 KIVRA
+%% Copyright (c) 2012-2019 KIVRA
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining a
 %% copy of this software and associated documentation files (the "Software"),
@@ -36,6 +36,7 @@
 
 -export([construct_url/2]).
 -export([construct_url/3]).
+-export([construct_url/4]).
 
 -type method()       :: head    |
                         get     |
@@ -160,28 +161,34 @@ request_loop(Method, Type, Url, Expect, Headers, Body, Options, Retries) ->
   end.
 
 -spec construct_url(FullPath::url(), Query::querys()) -> Url::url().
-construct_url(FullPath, Query) when is_binary(FullPath) ->
-  construct_url(binary_to_list(FullPath), Query);
-construct_url(FullPath, Query) when is_list(FullPath) ->
-  {S, N, P, _, _} = mochiweb_util:urlsplit(FullPath),
-  Q = mochiweb_util:urlencode(Query),
-  mochiweb_util:urlunsplit({S, N, P, Q, []}).
+construct_url(FullPath, Query) ->
+  construct_url(FullPath, <<>>, Query).
 
--spec construct_url(FullPath::url(),
+-spec construct_url(BaseUrl::url(),
                     Path::url(),
                     Query::querys()) -> Url::url().
-construct_url(SchemeNetloc, Path, Query) when is_binary(SchemeNetloc) ->
-  construct_url(binary_to_list(SchemeNetloc), Path, Query);
-construct_url(SchemeNetloc, Path, Query) when is_binary(Path) ->
-  construct_url(SchemeNetloc, binary_to_list(Path), Query);
-construct_url(SchemeNetloc, Path, Query) when is_list(SchemeNetloc),
-                                              is_list(Path) ->
-  {S, N, P1, _, _} = mochiweb_util:urlsplit(SchemeNetloc),
-  {_, _, P2, _, _} = mochiweb_util:urlsplit(Path),
-  P = path_cat(P1, P2),
-  urlunsplit(S, N, P, Query).
+construct_url(BaseUrl, Path, Query) ->
+  construct_url(BaseUrl, Path, Query, []).
+
+-spec construct_url(BaseUrl::url(),
+                    Path::url(),
+                    Query::querys(),
+                    Options::[option()]) -> Url::url().
+construct_url(BaseUrl, Path, Query, Options) ->
+  BaseUrlBin = to_binary(BaseUrl),
+  PathBin    = to_binary(Path),
+  QueryBin   = lists:map(fun({K,V}) -> {to_binary(K), to_binary(V)} end, Query),
+  UrlBin     = hackney_url:make_url(BaseUrlBin, PathBin, QueryBin),
+  case Options of
+    [return_binary] -> UrlBin;
+    [] -> binary_to_list(UrlBin)
+  end.
 
 %%% INTERNAL ===================================================================
+
+to_binary(V) when is_binary(V) -> V;
+to_binary(V) when is_list(V)   -> list_to_binary(V).
+
 normalize_headers(Headers) ->
   lists:map(fun({Key, Val}) ->
                 {string:lowercase(Key), Val}
@@ -229,25 +236,6 @@ encode_body(percent, Body) ->
   mochiweb_util:urlencode(Body);
 encode_body(xml, Body) ->
   lists:flatten(xmerl:export_simple(Body, xmerl_xml)).
-
-urlunsplit(S, N, P, Query) ->
-  Q = mochiweb_util:urlencode(Query),
-  mochiweb_util:urlunsplit({S, N, P, Q, []}).
-
-path_cat(P1, P2) ->
-  UL = lists:append(path_fix(P1), path_fix(P2)),
-  ["/"++U || U <- UL].
-
-path_fix(S) ->
-  PS = mochiweb_util:path_split(S),
-  path_fix(PS, []).
-
-path_fix({[], []}, Acc) ->
-  lists:reverse(Acc);
-path_fix({[], T}, Acc) ->
-  path_fix(mochiweb_util:path_split(T), Acc);
-path_fix({H, T}, Acc) ->
-  path_fix(mochiweb_util:path_split(T), [H|Acc]).
 
 parse_response({ok, 204, Headers, Client}) ->
   ok = hackney:close(Client),
