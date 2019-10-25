@@ -233,7 +233,10 @@ check_expect(Status, Expect) ->
 encode_body(json, Body) ->
   jsx:encode(Body);
 encode_body(percent, Body) ->
-  mochiweb_util:urlencode(Body);
+  lists:map(fun({K, V}) ->
+                {list_to_binary(K), list_to_binary(V)}
+            end, Body),
+  binary_to_list(hackney_url:qs(Body, []));
 encode_body(xml, Body) ->
   lists:flatten(xmerl:export_simple(Body, xmerl_xml)).
 

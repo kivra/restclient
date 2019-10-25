@@ -1,26 +1,26 @@
 {"1.1.0",
 [{<<"certifi">>,{pkg,<<"certifi">>,<<"2.5.1">>},1},
  {<<"erlsom">>,{pkg,<<"erlsom">>,<<"1.5.0">>},0},
- {<<"hackney">>,{pkg,<<"hackney">>,<<"1.15.1">>},0},
+ {<<"hackney">>,
+  {git,"https://github.com/alexandrejbr/hackney.git",
+       {ref,"14fb0ea491e7747649edc92768500b4ccb3ff776"}},
+  0},
  {<<"idna">>,{pkg,<<"idna">>,<<"6.0.0">>},1},
  {<<"jsx">>,{pkg,<<"jsx">>,<<"2.9.0">>},0},
  {<<"metrics">>,{pkg,<<"metrics">>,<<"1.0.1">>},1},
  {<<"mimerl">>,{pkg,<<"mimerl">>,<<"1.2.0">>},1},
- {<<"mochiweb_util">>,{pkg,<<"mochiweb_util">>,<<"0.1.0">>},0},
  {<<"parse_trans">>,{pkg,<<"parse_trans">>,<<"3.3.0">>},2},
- {<<"ssl_verify_fun">>,{pkg,<<"ssl_verify_fun">>,<<"1.1.4">>},1},
+ {<<"ssl_verify_fun">>,{pkg,<<"ssl_verify_fun">>,<<"1.1.5">>},1},
  {<<"unicode_util_compat">>,{pkg,<<"unicode_util_compat">>,<<"0.4.1">>},2}]}.
 [
 {pkg_hash,[
  {<<"certifi">>, <<"867CE347F7C7D78563450A18A6A28A8090331E77FA02380B4A21962A65D36EE5">>},
  {<<"erlsom">>, <<"C5A5CDD0EE0E8DCA62BCC4B13FF08DA24FDEFC16CCD8B25282A2FDA2BA1BE24A">>},
- {<<"hackney">>, <<"9F8F471C844B8CE395F7B6D8398139E26DDCA9EBC171A8B91342EE15A19963F4">>},
  {<<"idna">>, <<"689C46CBCDF3524C44D5F3DDE8001F364CD7608A99556D8FBD8239A5798D4C10">>},
  {<<"jsx">>, <<"D2F6E5F069C00266CAD52FB15D87C428579EA4D7D73A33669E12679E203329DD">>},
  {<<"metrics">>, <<"25F094DEA2CDA98213CECC3AEFF09E940299D950904393B2A29D191C346A8486">>},
  {<<"mimerl">>, <<"67E2D3F571088D5CFD3E550C383094B47159F3EEE8FFA08E64106CDF5E981BE3">>},
- {<<"mochiweb_util">>, <<"ECD20D44C6A8E19D1D6E5FE6921E55E921DA6E42F8757A00FF901C7AD4DC5D3D">>},
  {<<"parse_trans">>, <<"09765507A3C7590A784615CFD421D101AEC25098D50B89D7AA1D66646BC571C1">>},
- {<<"ssl_verify_fun">>, <<"F0EAFFF810D2041E93F915EF59899C923F4568F4585904D010387ED74988E77B">>},
+ {<<"ssl_verify_fun">>, <<"6EAF7AD16CB568BB01753DBBD7A95FF8B91C7979482B95F38443FE2C8852A79B">>},
  {<<"unicode_util_compat">>, <<"D869E4C68901DD9531385BB0C8C40444EBF624E60B6962D95952775CAC5E90CD">>}]}
 ].

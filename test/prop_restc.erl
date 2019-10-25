@@ -4,41 +4,45 @@
 %%%%%%%%%%%%%%%%%%
 %%% Properties %%%
 %%%%%%%%%%%%%%%%%%
-prop_test() ->
-    ?FORALL({S,H,P,Q}, {scheme(), host(), path(), query_elements()},
-        begin
-          BaseUrlBin = <<S/binary, "://", H/binary>>,
-          BaseUrl = binary_to_list(BaseUrlBin),
-          Path = binary_to_list(P),
-          Query = lists:map(fun({K, V}) ->
-                                {binary_to_list(K), binary_to_list(V)}
-                            end, Q),
-          Oracle = construct_url_oracle(BaseUrl, Path, Query),
-          RestC0 = restc:construct_url(BaseUrl, Path, Query, [return_binary]),
+prop_contruct_url_3() ->
+  ?FORALL({S,H,P,Q}, {scheme(), host(), path(), query_elements()},
+          begin
+            BaseUrlBin = <<S/binary, "://", H/binary>>,
+            BaseUrl = binary_to_list(BaseUrlBin),
+            Path = binary_to_list(P),
+            Query = lists:map(fun({K, V}) ->
+                                  {binary_to_list(K), binary_to_list(V)}
+                              end, Q),
+            Oracle = construct_url_oracle(BaseUrl, Path, Query),
+            RestC0 = restc:construct_url(BaseUrl, Path, Query, [return_binary]),
 
-          RestC = case P of
-                    P when P =:= <<>>; P =:= <<"/">> ->
-                      {match, [[Left, Right]]} =
-                        re:run(RestC0,
-                               <<"(https?://.*)/(\\??.*)">>,
-                               [global, {capture, all_but_first, binary}]),
-                      <<Left/binary, Right/binary>>;
-                    _ -> RestC0
-                  end,
-          erlang:display({Oracle, binary_to_list(RestC)}),
-          string:lowercase(Oracle) =:= string:lowercase(binary_to_list(RestC))
-        end).
+            RestC = case P of
+                      P when P =:= <<>>; P =:= <<"/">> ->
+                        {match, [[Left, Right]]} =
+                          re:run(RestC0,
+                                 <<"(https?://.*)/(\\??.*)">>,
+                                 [global, {capture, all_but_first, binary}]),
+                        <<Left/binary, Right/binary>>;
+                      _ -> RestC0
+                    end,
+            %% use lowercase since Oracle returns uppercase percent encoded and
+            %% implementation uses lowercase percent encoded
+            string:lowercase(Oracle) =:= string:lowercase(binary_to_list(RestC))
+          end).
+
+%% prop_te() ->
+%%   ?FORALL(Q, query_elements(),
+%%           begin
+%%             Query = lists:map(fun({K, V}) ->
+%%                                   {binary_to_list(K), binary_to_list(V)}
+%%                               end, Q),
+%%             string:lowercase(mochiweb_util:urlencode(Query)) =:=
+%%               string:lowercase(restc:encode_body(percent, Query))
+%%           end).
 
 %%%%%%%%%%%%%%%
 %%% Helpers %%%
 %%%%%%%%%%%%%%%
-
-construct_url_oracle(FullPath, Query) when is_binary(FullPath) ->
-  construct_url_oracle(binary_to_list(FullPath), Query);
-construct_url_oracle(FullPath, Query) when is_list(FullPath) ->
-  {S, N, P, _, _} = mochiweb_util:urlsplit(FullPath),
-  Q = mochiweb_util:urlencode(Query),
-  mochiweb_util:urlunsplit({S, N, P, Q, []}).
 
 construct_url_oracle(SchemeNetloc, Path, Query) when is_binary(SchemeNetloc) ->
   construct_url_oracle(binary_to_list(SchemeNetloc), Path, Query);
@@ -77,11 +81,21 @@ scheme() ->
   oneof([<<"http">>, <<"https">>]).
 
 host() ->
-  oneof([<<"localhost:9839">>, <<"kivra.com">>, <<"api.kivra.com">>, <<"kivra:80">>, <<"kivra">>,
-         <<"1.0.2.3:47">>, <<"1.9.0.2">>, <<"kivra.com/user">>]).
+  oneof([<<"localhost:9839">>, <<"kivra.com">>, <<"api.kivra.com">>,
+         <<"kivra:80">>, <<"kivra">>, <<"1.0.2.3:47">>, <<"1.9.0.2">>,
+         <<"kivra.com/user">>]).
 path() ->
-  ?LET(PathElems, list(utf8()),
-      iolist_to_binary(lists:join(<<"/">>, PathElems))).
+  ?LET(PathElems, list(non_empty(utf8_filtered())),
+       begin
+         iolist_to_binary(lists:join(<<"/">>, PathElems))
+       end).
+
+utf8_filtered() ->
+  ?LET(V, utf8(),
+       binary:replace(V, [<<"#">>, <<"/">>, <<"?">>,
+                         %% To avoid mochiweb_util:urlsplit bugs
+                          <<"+">>, <<":">>
+                         ], <<>>, [global])).
 
 query_elements() ->
   list({utf8(), utf8()}).
