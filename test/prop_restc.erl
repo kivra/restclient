@@ -30,16 +30,6 @@ prop_contruct_url_3() ->
             string:lowercase(Oracle) =:= string:lowercase(binary_to_list(RestC))
           end).
 
-%% prop_te() ->
-%%   ?FORALL(Q, query_elements(),
-%%           begin
-%%             Query = lists:map(fun({K, V}) ->
-%%                                   {binary_to_list(K), binary_to_list(V)}
-%%                               end, Q),
-%%             string:lowercase(mochiweb_util:urlencode(Query)) =:=
-%%               string:lowercase(restc:encode_body(percent, Query))
-%%           end).
-
 %%%%%%%%%%%%%%%
 %%% Helpers %%%
 %%%%%%%%%%%%%%%
