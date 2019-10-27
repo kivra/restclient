@@ -187,7 +187,8 @@ construct_url(BaseUrl, Path, Query, Options) ->
 %%% INTERNAL ===================================================================
 
 to_binary(V) when is_binary(V) -> V;
-to_binary(V) when is_list(V)   -> list_to_binary(V).
+to_binary(V) when is_list(V)   -> list_to_binary(V);
+to_binary(V) when is_atom(V)   -> atom_to_binary(V, utf8).
 
 normalize_headers(Headers) ->
   lists:map(fun({Key, Val}) ->
