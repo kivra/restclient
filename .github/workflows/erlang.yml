@@ -18,6 +18,8 @@ jobs:
       run: rebar3 xref
     - name: Run elvis
       run: make elvis_rock
+    - name: Run proper tests
+      run: rebar3 proper -n 1000
 
   dialyze:
 
