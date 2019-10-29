@@ -9,6 +9,7 @@ all() ->
   , {group, expect_status}
   , {group, retries}
   , {group, request_body_encoding}
+  , {group, request_qs_encoding}
   , {group, response_body_decoding}
   , {group, accept_header_and_type}
   ].
@@ -38,6 +39,9 @@ groups() ->
      , method_is_put__making_request__body_is_encoded
      , method_is_patch__making_request__body_is_encoded
      , method_is_something_else__making_request__body_is_empty_list
+     ]}
+  ,{ request_qs_encoding,
+     [ qs_is_binary__making_request
      ]}
   ,{ response_body_decoding,
      [ no_content_type_returned__making_json_request__decode_response_as_json
@@ -201,6 +205,12 @@ method_is_something_else__making_request__body_is_empty_list(_Config) ->
 
   ActualBody = meck:capture(first, hackney, request, '_', 4, '_'),
   ?assertEqual(ExpectedBody, ActualBody).
+
+qs_is_binary__making_request(_Config) ->
+  Params = [{k1, <<"v1">>}, {k2, "v2"}, {k3, 3}],
+  Result = restc:construct_url(<<"http://any_url.com">>, <<"path">>, Params),
+  ExpectedResult = "http://any_url.com/path?k1=v1&k2=v2&k3=3",
+  ?assertEqual(ExpectedResult, Result).
 
 no_content_type_returned__making_json_request__decode_response_as_json(_Config) ->
   ExpectedResponseBody = [{<<"any">>, <<"data">>}],
