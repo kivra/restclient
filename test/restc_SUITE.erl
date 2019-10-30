@@ -37,6 +37,8 @@ groups() ->
      , method_is_post__making_request__body_is_encoded
      , method_is_put__making_request__body_is_encoded
      , method_is_patch__making_request__body_is_encoded
+     , method_is_delete__making_request__body_is_encoded
+     , method_is_delete__making_request__body_is_empty
      , method_is_something_else__making_request__body_is_empty_list
      ]}
   ,{ response_body_decoding,
@@ -193,11 +195,28 @@ method_is_patch__making_request__body_is_encoded(_Config) ->
 
   ?assert(meck:called(jsx, encode, '_')).
 
+method_is_delete__making_request__body_is_encoded(_Config) ->
+  mock_hackney_success(200),
+  meck:new(jsx, [passthrough]),
+
+  restc:request(delete, json, <<"http://any_url.com">>, [200], [], [{<<"any">>, <<"data">>}]),
+
+  ?assert(meck:called(jsx, encode, '_')).
+
+method_is_delete__making_request__body_is_empty(_Config) ->
+  mock_hackney_success(200),
+  meck:new(jsx, [passthrough]),
+
+  %% I feel it needs a case when the body can be empty
+  restc:request(delete, json, <<"http://any_url.com">>, [200], [], <<>>),
+
+  ?assert(meck:called(jsx, encode, '_')).
+
 method_is_something_else__making_request__body_is_empty_list(_Config) ->
   mock_hackney_success(200),
   ExpectedBody = [],
 
-  restc:request(delete, json, <<"http://any_url.com">>, [200], [], [{<<"any">>, <<"data">>}]),
+  restc:request(options, json, <<"http://any_url.com">>, [200], [], [{<<"any">>, <<"data">>}]),
 
   ActualBody = meck:capture(first, hackney, request, '_', 4, '_'),
   ?assertEqual(ExpectedBody, ActualBody).
