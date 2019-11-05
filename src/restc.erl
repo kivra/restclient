@@ -175,9 +175,9 @@ construct_url(BaseUrl, Path, Query) ->
                     Query::querys(),
                     Options::[option()]) -> Url::url().
 construct_url(BaseUrl, Path, Query, Options) ->
-  BaseUrlBin = to_binary(BaseUrl),
-  PathBin    = to_binary(Path),
-  QueryBin   = lists:map(fun({K,V}) -> {to_binary(K), to_binary(V)} end, Query),
+  BaseUrlBin = s_to_binary(BaseUrl),
+  PathBin    = s_to_binary(Path),
+  QueryBin   = lists:map(fun({K,V}) -> {s_to_binary(K), s_to_binary(V)} end, Query),
   UrlBin     = hackney_url:make_url(BaseUrlBin, PathBin, QueryBin),
   case Options of
     [return_binary] -> UrlBin;
@@ -186,8 +186,13 @@ construct_url(BaseUrl, Path, Query, Options) ->
 
 %%% INTERNAL ===================================================================
 
-to_binary(V) when is_binary(V) -> V;
-to_binary(V) when is_list(V)   -> list_to_binary(V).
+%% Convert from string() to binary()
+s_to_binary(V) when is_binary(V) -> V;
+s_to_binary(V) when is_list(V)   -> list_to_binary(V).
+
+to_binary(V) when is_integer(V) -> integer_to_binary(V);
+to_binary(V) when is_atom(V)    -> atom_to_binary(V, utf8);
+to_binary(V)                    -> s_to_binary(V).
 
 normalize_headers(Headers) ->
   lists:map(fun({Key, Val}) ->
