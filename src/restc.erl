@@ -177,7 +177,9 @@ construct_url(BaseUrl, Path, Query) ->
 construct_url(BaseUrl, Path, Query, Options) ->
   BaseUrlBin = s_to_binary(BaseUrl),
   PathBin    = s_to_binary(Path),
-  QueryBin   = lists:map(fun({K,V}) -> {s_to_binary(K), s_to_binary(V)} end, Query),
+  QueryBin   = lists:map(fun({K,V}) ->
+                             {s_to_binary(K), s_to_binary(V)}
+                         end, Query),
   UrlBin     = hackney_url:make_url(BaseUrlBin, PathBin, QueryBin),
   case Options of
     [return_binary] -> UrlBin;
