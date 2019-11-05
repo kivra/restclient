@@ -85,8 +85,9 @@
              , response/0
              ]).
 
-%%% API ========================================================================
+-import(restc_util, [ string_to_binary/1]).
 
+%%% API ========================================================================
 
 -spec request(Url::url()) -> Response::response().
 request(Url) ->
@@ -187,14 +188,6 @@ construct_url(BaseUrl, Path, Query, Options) ->
   end.
 
 %%% INTERNAL ===================================================================
-
-string_to_binary(V) when is_binary(V) -> V;
-string_to_binary(V) when is_list(V)   -> list_to_binary(V).
-
-to_binary(V) when is_integer(V) -> integer_to_binary(V);
-to_binary(V) when is_atom(V)    -> atom_to_binary(V, utf8);
-to_binary(V)                    -> string_to_binary(V).
-
 normalize_headers(Headers) ->
   lists:map(fun({Key, Val}) ->
                 {string:lowercase(Key), Val}
@@ -220,13 +213,13 @@ default_content_type(Type) ->
   {<<"content-type">>, get_ctype(Type)}.
 
 do_request(post, Type, Url, Headers, Body, Options) ->
-  Body2 = encode_body(Type, Body),
+  Body2 = restc_body:encode(Type, Body),
   hackney:request(post, Url, Headers, Body2, Options);
 do_request(put, Type, Url, Headers, Body, Options) ->
-  Body2 = encode_body(Type, Body),
+  Body2 = restc_body:encode(Type, Body),
   hackney:request(put, Url, Headers, Body2, Options);
 do_request(patch, Type, Url, Headers, Body, Options) ->
-  Body2 = encode_body(Type, Body),
+  Body2 = restc_body:encode(Type, Body),
   hackney:request(patch, Url, Headers, Body2, Options);
 do_request(Method, _, Url, Headers, _, Options) when is_atom(Method) ->
   hackney:request(Method, Url, Headers, [], Options).
@@ -235,16 +228,6 @@ check_expect(_Status, []) ->
   true;
 check_expect(Status, Expect) ->
   lists:member(Status, Expect).
-
-encode_body(json, Body) ->
-  jsx:encode(Body);
-encode_body(percent, Body) ->
-  lists:map(fun({K, V}) ->
-                {to_binary(K), to_binary(V)}
-            end, Body),
-  binary_to_list(hackney_url:qs(Body, []));
-encode_body(xml, Body) ->
-  lists:flatten(xmerl:export_simple(Body, xmerl_xml)).
 
 parse_response({ok, 204, Headers, Client}) ->
   ok = hackney:close(Client),
@@ -255,7 +238,7 @@ parse_response({ok, Status, Headers, Client}) ->
     content_type(NormalizedHeaders, ?DEFAULT_CTYPE),
   Type = parse_type(ContentType),
   case hackney:body(Client) of
-    {ok, Body}   -> {ok, Status, Headers, parse_body(Type, Body)};
+    {ok, Body}   -> {ok, Status, Headers, restc_body:decode(Type, Body)};
     {error, _}=E -> E
   end;
 parse_response({error, Type}) ->
@@ -266,15 +249,6 @@ parse_type(Type) ->
     [CType, _] -> CType;
     _ -> Type
   end.
-
-parse_body(_, <<>>)                      -> [];
-parse_body(<<"application/json">>, Body) -> jsx:decode(Body);
-parse_body(<<"application/xml">>, Body)  ->
-  {ok, Data, _} = erlsom:simple_form(binary_to_list(Body)),
-  Data;
-parse_body(<<"text/xml">>, Body)  -> parse_body(<<"application/xml">>, Body);
-parse_body(<<"image/png">>, Body) -> Body;
-parse_body(_, Body)               -> Body.
 
 get_accesstype(json)    -> <<"application/json">>;
 get_accesstype(xml)     -> <<"application/xml">>;
