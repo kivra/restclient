@@ -213,14 +213,14 @@ default_content_type(Type) ->
   {<<"content-type">>, get_ctype(Type)}.
 
 do_request(post, Type, Url, Headers, Body, Options) ->
-  Body2 = restc_body:encode(Type, Body),
-  hackney:request(post, Url, Headers, Body2, Options);
+  EncodedBody = restc_body:encode(Type, Body),
+  hackney:request(post, Url, Headers, EncodedBody, Options);
 do_request(put, Type, Url, Headers, Body, Options) ->
-  Body2 = restc_body:encode(Type, Body),
-  hackney:request(put, Url, Headers, Body2, Options);
+  EncodedBody = restc_body:encode(Type, Body),
+  hackney:request(put, Url, Headers, EncodedBody, Options);
 do_request(patch, Type, Url, Headers, Body, Options) ->
-  Body2 = restc_body:encode(Type, Body),
-  hackney:request(patch, Url, Headers, Body2, Options);
+  EncodedBody = restc_body:encode(Type, Body),
+  hackney:request(patch, Url, Headers, EncodedBody, Options);
 do_request(Method, _, Url, Headers, _, Options) when is_atom(Method) ->
   hackney:request(Method, Url, Headers, [], Options).
 
