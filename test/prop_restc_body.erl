@@ -7,7 +7,7 @@
 prop_decode_encode_json() ->
     ?FORALL(Obj, object_proplist(),
             Obj =:= restc_body:decode(<<"application/json">>,
-                                      restc_body:encode(json, Obj))).
+                                      restc_body:encode(json, Obj), [])).
 
 %%%%%%%%%%%%%%%%%%
 %%% Generators %%%

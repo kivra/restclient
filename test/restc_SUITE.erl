@@ -42,6 +42,7 @@ groups() ->
   ,{ response_body_decoding,
      [ no_content_type_returned__making_json_request__decode_response_as_json
      , content_type_returned__making_json_request__decode_response_as_content_type
+     , return_maps
      ]}
   ,{ accept_header_and_type,
      [ type_is_json__making_request_with_no_headers__accept_header_is_json
@@ -219,6 +220,16 @@ content_type_returned__making_json_request__decode_response_as_content_type(_Con
   {ok, _, _, ActualResponseBody} = restc:request(get, <<"http://any_url.com">>),
 
   ?assertEqual(ExpectedResponseBody, ActualResponseBody).
+
+return_maps(_Config) ->
+  ResponseBody = #{<<"first_level">> => #{<<"second_level">> => [<<"a">>, <<"b">>]}},
+  EncodedResponseBody = jsx:encode(ResponseBody),
+  mock_hackney_success(200, [{<<"Content-Type">>, <<"application/json">>}], EncodedResponseBody),
+
+  {ok, _, _, ActualResponseBody} =
+    restc:request(get, na, <<"http://any_url.com">>, [], [], <<>>, [return_maps]),
+
+  ?assertEqual(ResponseBody, ActualResponseBody).
 
 type_is_json__making_request_with_no_headers__accept_header_is_json(_Config) ->
   mock_hackney_success(200),
