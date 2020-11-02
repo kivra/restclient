@@ -143,7 +143,8 @@ request(Method, Type, Url, Expect, Headers0, Body, Options) ->
 
 request_loop(Method, Type, Url, Expect, Headers, Body, Options, Retries) ->
   Response =
-    parse_response(do_request(Method, Type, Url, Headers, Body, Options)),
+    parse_response(
+      do_request(Method, Type, Url, Headers, Body, Options), Options),
   case Response of
     {ok, Status, H, B} ->
       case check_expect(Status, Expect) of
@@ -229,19 +230,19 @@ check_expect(_Status, []) ->
 check_expect(Status, Expect) ->
   lists:member(Status, Expect).
 
-parse_response({ok, 204, Headers, Client}) ->
+parse_response({ok, 204, Headers, Client}, _Opts) ->
   ok = hackney:close(Client),
   {ok, 204, Headers, []};
-parse_response({ok, Status, Headers, Client}) ->
+parse_response({ok, Status, Headers, Client}, Opts) ->
   NormalizedHeaders = normalize_headers(Headers),
   {<<"content-type">>, ContentType} =
     content_type(NormalizedHeaders, ?DEFAULT_CTYPE),
   Type = parse_type(ContentType),
   case hackney:body(Client) of
-    {ok, Body}   -> {ok, Status, Headers, restc_body:decode(Type, Body)};
+    {ok, Body}   -> {ok, Status, Headers, restc_body:decode(Type, Body, Opts)};
     {error, _}=E -> E
   end;
-parse_response({error, Type}) ->
+parse_response({error, Type}, _Opts) ->
   {error, Type}.
 
 parse_type(Type) ->

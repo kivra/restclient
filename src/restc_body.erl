@@ -1,6 +1,6 @@
 -module(restc_body).
 
--export([encode/2, decode/2]).
+-export([encode/2, decode/3]).
 
 encode(json, Body) ->
   jsx:encode(Body);
@@ -12,11 +12,12 @@ encode(percent, Body) ->
 encode(xml, Body) ->
   lists:flatten(xmerl:export_simple(Body, xmerl_xml)).
 
-decode(_, <<>>)                      -> [];
-decode(<<"application/json">>, Body) -> jsx:decode(Body);
-decode(<<"application/xml">>, Body)  ->
+decode(_, <<>>, _Opts)                      -> [];
+decode(<<"application/json">>, Body, Opts)  -> jsx:decode(Body, Opts);
+decode(<<"application/xml">>, Body, _Opts)  ->
   {ok, Data, _} = erlsom:simple_form(binary_to_list(Body)),
   Data;
-decode(<<"text/xml">>, Body)  -> decode(<<"application/xml">>, Body);
-decode(<<"image/png">>, Body) -> Body;
-decode(_, Body)               -> Body.
+decode(<<"text/xml">>, Body, Opts)   ->
+  decode(<<"application/xml">>, Body, Opts);
+decode(<<"image/png">>, Body, _Opts) -> Body;
+decode(_, Body, _Opts)               -> Body.
