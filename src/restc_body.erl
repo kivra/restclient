@@ -13,7 +13,13 @@ encode(xml, Body) ->
   lists:flatten(xmerl:export_simple(Body, xmerl_xml)).
 
 decode(_, <<>>, _Opts)                      -> [];
-decode(<<"application/json">>, Body, Opts)  -> jsx:decode(Body, Opts);
+decode(<<"application/json">>, Body, Opts0)  ->
+  Opts =
+    case lists:member(return_maps, Opts0) of
+      true -> [return_maps];
+      false -> []
+    end,
+  jsx:decode(Body, Opts);
 decode(<<"application/xml">>, Body, _Opts)  ->
   {ok, Data, _} = erlsom:simple_form(binary_to_list(Body)),
   Data;
