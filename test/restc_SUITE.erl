@@ -153,7 +153,7 @@ type_is_json__making_request__sends_json_encoded_body(_Config) ->
 type_is_percent__making_request__sends_percent_encoded_body(_Config) ->
   mock_hackney_success(200),
   Body = [{<<"any">>, <<"data">>}],
-  ExpectedBody = mochiweb_util:urlencode(Body),
+  ExpectedBody = list_to_binary(mochiweb_util:urlencode(Body)),
 
   restc:request(post, percent, <<"http://any_url.com">>, [200], [], Body),
 
