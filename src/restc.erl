@@ -179,7 +179,7 @@ construct_url(BaseUrl, Path, Query) ->
 construct_url(BaseUrl, Path, Query, Options) ->
   BaseUrlBin = string_to_binary(BaseUrl),
   PathBin    = string_to_binary(Path),
-  QueryBin   = lists:map(fun({K,V}) ->
+  QueryBin   = lists:map(fun({K, V}) ->
                              {string_to_binary(K), string_to_binary(V)}
                          end, Query),
   UrlBin     = hackney_url:make_url(BaseUrlBin, PathBin, QueryBin),
