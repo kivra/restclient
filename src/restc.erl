@@ -213,6 +213,8 @@ content_type(Headers, Type) ->
 default_content_type(Type) ->
   {<<"content-type">>, get_ctype(Type)}.
 
+do_request(post, json = _Type, Url, Headers, [] = _Body, Options) ->
+    hackney:request(post, Url, Headers, [], Options);
 do_request(post, Type, Url, Headers, Body, Options) ->
   EncodedBody = restc_body:encode(Type, Body),
   hackney:request(post, Url, Headers, EncodedBody, Options);
