@@ -266,12 +266,14 @@ get_accesstype(json)    -> <<"application/json">>;
 get_accesstype(xml)     -> <<"application/xml">>;
 get_accesstype(percent) -> <<"application/json">>;
 get_accesstype(png)     -> <<"image/png">>;
+get_accesstype(multi)   -> <<"multipart/form-data">>;
 get_accesstype(_)       -> get_ctype(?DEFAULT_ENCODING).
 
 get_ctype(json)    -> <<"application/json">>;
 get_ctype(xml)     -> <<"application/xml">>;
 get_ctype(percent) -> <<"application/x-www-form-urlencoded">>;
 get_ctype(png)     -> <<"image/png">>;
+get_ctype(multi)   -> <<"multipart/form-data">>;
 get_ctype(_)       -> get_ctype(?DEFAULT_ENCODING).
 
 %%%_* Emacs ============================================================
