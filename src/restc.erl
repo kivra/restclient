@@ -56,8 +56,17 @@
 -type status_codes() :: [status_code()].
 -type status_code()  :: integer().
 -type reason()       :: term().
--type content_type() :: json | xml | percent | png.
--type body()         :: binary() | jsx:json_term() | erlsom:simple_form().
+-type content_type() :: multi | json | xml | percent | png.
+-type body()         :: binary()             |
+                        jsx:json_term()      |
+                        erlsom:simple_form() |
+                        multi_body().
+-type multi_part()   :: {Name::binary(), Value::binary()} |
+                        { file
+                        , Path::binary()
+                        , Name::binary()
+                        , Headers::headers()}.
+-type multi_body()   :: [multi_part()].
 -type response()     :: { ok, Status::status_code()
                         , Headers::headers()
                         , Body::body()}               |

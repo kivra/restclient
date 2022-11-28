@@ -9,7 +9,9 @@ encode(percent, Body) when is_map(Body) ->
 encode(percent, Body) ->
     hackney_url:qs(Body, []);
 encode(xml, Body) ->
-    lists:flatten(xmerl:export_simple(Body, xmerl_xml)).
+    lists:flatten(xmerl:export_simple(Body, xmerl_xml));
+encode(multi, Body) ->
+    {multipart, Body}.
 
 decode(_, <<>>, Opts) ->
     case proplists:get_bool(return_maps, Opts) of
