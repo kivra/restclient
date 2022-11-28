@@ -56,8 +56,17 @@
 -type status_codes() :: [status_code()].
 -type status_code()  :: integer().
 -type reason()       :: term().
--type content_type() :: json | xml | percent | png.
--type body()         :: binary() | jsx:json_term() | erlsom:simple_form().
+-type content_type() :: multi | json | xml | percent | png.
+-type body()         :: binary()             |
+                        jsx:json_term()      |
+                        erlsom:simple_form() |
+                        multi_body().
+-type multi_part()   :: {Name::binary(), Value::binary()} |
+                        { file
+                        , Path::binary()
+                        , Name::binary()
+                        , Headers::headers()}.
+-type multi_body()   :: [multi_part()].
 -type response()     :: { ok, Status::status_code()
                         , Headers::headers()
                         , Body::body()}               |
@@ -257,12 +266,14 @@ get_accesstype(json)    -> <<"application/json">>;
 get_accesstype(xml)     -> <<"application/xml">>;
 get_accesstype(percent) -> <<"application/json">>;
 get_accesstype(png)     -> <<"image/png">>;
+get_accesstype(multi)   -> <<"multipart/form-data">>;
 get_accesstype(_)       -> get_ctype(?DEFAULT_ENCODING).
 
 get_ctype(json)    -> <<"application/json">>;
 get_ctype(xml)     -> <<"application/xml">>;
 get_ctype(percent) -> <<"application/x-www-form-urlencoded">>;
 get_ctype(png)     -> <<"image/png">>;
+get_ctype(multi)   -> <<"multipart/form-data">>;
 get_ctype(_)       -> get_ctype(?DEFAULT_ENCODING).
 
 %%%_* Emacs ============================================================
