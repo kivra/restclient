@@ -3,9 +3,9 @@ PROJECT = restc
 # Dependecies ##########################################################
 DEPS = hackney jsx erlsom
 
-dep_hackney       = hex 1.15.1
-dep_jsx           = hex 2.9.0
-dep_erlsom        = hex 1.5.0
+dep_hackney       = hex 1.20.1
+dep_jsx           = hex 3.1.0
+dep_erlsom        = hex 1.5.1
 
 # Standard targets #####################################################
 include erlang.mk
