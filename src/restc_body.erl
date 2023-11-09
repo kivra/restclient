@@ -21,8 +21,8 @@ decode(_, <<>>, Opts) ->
 decode(<<"application/json">>, Body, Opts0) ->
     Opts =
         case lists:member(return_maps, Opts0) of
-            true -> [return_maps];
-            false -> []
+            true -> [{return_maps, true}];
+            false -> [{return_maps, false}]
         end,
     jsx:decode(Body, Opts);
 decode(<<"application/xml">>, Body, _Opts) ->
