@@ -59,7 +59,7 @@
 -type content_type() :: multi | json | xml | percent | png.
 -type body()         :: binary()             |
                         jsx:json_term()      |
-                        term() | % check erlsom:simple_form/1,2
+                        tuple() | % check erlsom:simple_form/1,2
                         multi_body().
 -type multi_part()   :: {Name::binary(), Value::binary()} |
                         { file
