@@ -1,6 +1,6 @@
 PROJECT = restc
 
-# Dependecies ##########################################################
+# Dependencies ##########################################################
 DEPS = hackney jsx erlsom
 
 dep_hackney       = hex 1.20.1
