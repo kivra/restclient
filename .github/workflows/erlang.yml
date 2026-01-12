@@ -9,11 +9,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - uses: erlef/setup-beam@v1.16.0
+    - uses: actions/checkout@v6
+    - uses: erlef/setup-beam@v1.20.4
       with:
-        otp-version: "24"
-        rebar3-version: "3.20.0"
+        otp-version: "27"
+        rebar3-version: "3.26.0"
     - name: Compile
       run: rebar3 compile
     - name: Run tests
@@ -30,10 +30,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - uses: erlef/setup-beam@v1.16.0
+    - uses: actions/checkout@v6
+    - uses: erlef/setup-beam@v1.20.4
       with:
-        otp-version: "24"
-        rebar3-version: "3.20.0"
+        otp-version: "27"
+        rebar3-version: "3.26.0"
     - name: Run dialyzer
       run: rebar3 dialyzer
