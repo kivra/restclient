@@ -34,6 +34,7 @@
                                       , ssl
                                       , hackney
                                       , jsx
+                                      , erlsom
                                       ]}
                      , {env,          []}
                      , {registered,   []}
