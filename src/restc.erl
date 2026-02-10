@@ -150,7 +150,9 @@ request(Method, Type, Url, Expect, Headers0, Body, Options) ->
   Retries = proplists:get_value(retries, Options, 0),
   request_loop(Method, Type, Url, Expect, Headers, Body, Options, Retries).
 
-request_loop(Method, Type, Url, Expect, Headers, Body, Options, Retries) ->
+request_loop(Method, Type, Url, Expect, Headers, Body, Options0, Retries) ->
+  %% Always ask for the body to provide backwards compatibility
+  Options = [{with_body, true} | Options0],
   Response =
     parse_response(
       do_request(Method, Type, Url, Headers, Body, Options), Options),
@@ -241,18 +243,14 @@ check_expect(_Status, []) ->
 check_expect(Status, Expect) ->
   lists:member(Status, Expect).
 
-parse_response({ok, 204, Headers, Client}, _Opts) ->
-  ok = hackney:close(Client),
+parse_response({ok, 204, Headers, _Body}, _Opts) ->
   {ok, 204, Headers, []};
-parse_response({ok, Status, Headers, Client}, Opts) ->
+parse_response({ok, Status, Headers, Body}, Opts) ->
   NormalizedHeaders = normalize_headers(Headers),
   {<<"content-type">>, ContentType} =
     content_type(NormalizedHeaders, ?DEFAULT_CTYPE),
   Type = parse_type(ContentType),
-  case hackney:body(Client) of
-    {ok, Body}   -> {ok, Status, Headers, restc_body:decode(Type, Body, Opts)};
-    {error, _}=E -> E
-  end;
+  {ok, Status, Headers, restc_body:decode(Type, Body, Opts)};
 parse_response({error, Type}, _Opts) ->
   {error, Type}.
 
