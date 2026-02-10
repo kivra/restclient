@@ -276,8 +276,7 @@ type_is_json__making_request_with_xml_accept_header__accept_header_overrides_typ
 mock_hackney_success(Code) -> mock_hackney_success(Code, [], <<>>).
 
 mock_hackney_success(Code, Headers, Body) ->
-  meck:expect(hackney, request, ['_', '_', '_', '_', '_'], meck:val({ok, Code, Headers, client})),
-  meck:expect(hackney, body, fun(client) -> {ok, Body} end).
+  meck:expect(hackney, request, ['_', '_', '_', '_', '_'], meck:val({ok, Code, Headers, Body})).
 
 mock_hackney_error(Error) ->
   meck:expect(hackney, request, ['_', '_', '_', '_', '_'], meck:val({error, Error})).
@@ -285,8 +284,7 @@ mock_hackney_error(Error) ->
 mock_hackney_eventual_success(Code, AmountOfErrors) ->
   ErrorCalls = error_calls(AmountOfErrors),
   meck:expect(hackney, request, ['_', '_', '_', '_', '_'],
-              meck:seq(ErrorCalls ++ [{ok, Code, [], client}])),
-  meck:expect(hackney, body, fun(client) -> {ok, <<>>} end).
+              meck:seq(ErrorCalls ++ [{ok, Code, [], <<>>}])).
 
 error_calls(0) -> [];
 error_calls(N) -> error_calls(N, []).

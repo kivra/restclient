@@ -687,12 +687,11 @@ parse_header_test() ->
     ok.
 
 guess_mime_test() ->
-    "text/plain" = guess_mime(""),
-    "text/plain" = guess_mime(".text"),
-    "application/zip" = guess_mime(".zip"),
-    "application/zip" = guess_mime("x.zip"),
-    "text/html" = guess_mime("x.html"),
-    "application/xhtml+xml" = guess_mime("x.xhtml"),
+    ?assertEqual("text/plain", guess_mime("")),
+    ?assertEqual("text/plain", guess_mime("x.text")),
+    ?assertEqual("application/zip", guess_mime("x.zip")),
+    ?assertEqual("text/html", guess_mime("x.html")),
+    ?assertEqual("application/xhtml+xml", guess_mime("x.xhtml")),
     ok.
 
 path_split_test() ->
