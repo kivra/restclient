@@ -153,9 +153,17 @@ request(Method, Type, Url, Expect, Headers0, Body, Options) ->
 request_loop(Method, Type, Url, Expect, Headers, Body, Options0, Retries) ->
   %% Always ask for the body to provide backwards compatibility
   Options = [{with_body, true} | Options0],
-  Response =
-    parse_response(
-      do_request(Method, Type, Url, Headers, Body, Options), Options),
+  %% A connection-level failure (e.g. hackney exiting while checking out a
+  %% pooled connection that is concurrently terminating) surfaces as a process
+  %% exit. Without this guard it bypasses the retry handling below and crashes
+  %% the calling process; converting it to an error lets {retries, N} cover
+  %% transient connection failures like any other retryable response.
+  Result =
+    try do_request(Method, Type, Url, Headers, Body, Options)
+    catch
+      exit:Reason -> {error, {connection_failed, Reason}}
+    end,
+  Response = parse_response(Result, Options),
   case Response of
     {ok, Status, H, B} ->
       case check_expect(Status, Expect) of
