@@ -26,6 +26,9 @@
 
 -module(restc).
 
+-include_lib("opentelemetry_api/include/otel_tracer.hrl").
+-include_lib("opentelemetry_api/include/opentelemetry.hrl").
+
 -export([request/1]).
 -export([request/2]).
 -export([request/3]).
@@ -148,38 +151,72 @@ request(Method, Type, Url, Expect, Headers0, Body, Options) ->
   Headers = lists:usort([ accept(Headers1, Type)
                         , content_type(Headers1, Type) | Headers1]),
   Retries = proplists:get_value(retries, Options, 0),
-  request_loop(Method, Type, Url, Expect, Headers, Body, Options, Retries).
+  ?with_span(<<"restc request">>,
+             #{attributes => #{<<"http.request.method">> => method_attr(Method)}},
+             fun(_SpanCtx) ->
+               request_loop(Method, Type, Url, Expect, Headers, Body, Options,
+                            {Retries, 0})
+             end).
 
-request_loop(Method, Type, Url, Expect, Headers, Body, Options0, Retries) ->
+request_loop(Method, Type, Url, Expect, Headers, Body, Options0,
+             {Retries, Attempt}) ->
   %% Always ask for the body to provide backwards compatibility
   Options = [{with_body, true} | Options0],
-  %% A connection-level failure (e.g. hackney exiting while checking out a
-  %% pooled connection that is concurrently terminating) surfaces as a process
-  %% exit. Without this guard it bypasses the retry handling below and crashes
-  %% the calling process; converting it to an error lets {retries, N} cover
-  %% transient connection failures like any other retryable response.
-  Result =
-    try do_request(Method, Type, Url, Headers, Body, Options)
-    catch
-      exit:Reason -> {error, {connection_failed, Reason}}
-    end,
-  Response = parse_response(Result, Options),
+  %% Each attempt is its own child span so its duration is visible in the trace
+  %% and hackney's own HTTP-client span nests underneath it.
+  Response =
+    ?with_span(<<"restc attempt">>,
+               #{attributes => #{<<"http.request.resend_count">> => Attempt}},
+               fun(_SpanCtx) ->
+                 %% A connection-level failure (e.g. hackney exiting while
+                 %% checking out a pooled connection that is concurrently
+                 %% terminating) surfaces as a process exit. Without this guard
+                 %% it bypasses the retry handling below and crashes the calling
+                 %% process; converting it to an error lets {retries, N} cover
+                 %% transient connection failures like any other retryable response.
+                 Result =
+                   try do_request(Method, Type, Url, Headers, Body, Options)
+                   catch
+                     exit:Reason -> {error, {connection_failed, Reason}}
+                   end,
+                 R = parse_response(Result, Options),
+                 record_attempt(R),
+                 R
+               end),
   case Response of
     {ok, Status, H, B} ->
       case check_expect(Status, Expect) of
-        true -> Response;
+        true ->
+          record_outcome(Attempt, Status),
+          Response;
         false when Retries > 0 ->
           request_loop(Method, Type, Url, Expect, Headers, Body, Options,
-                       Retries-1);
+                       {Retries-1, Attempt+1});
         false ->
+          record_outcome(Attempt, Status),
+          ?set_status(?OTEL_STATUS_ERROR, <<"unexpected status code">>),
           {error, Status, H, B}
       end;
     _Error when Retries > 0 ->
       request_loop(Method, Type, Url, Expect, Headers, Body, Options,
-                   Retries-1);
+                   {Retries-1, Attempt+1});
     Error ->
+      ?set_attributes([{<<"http.request.resend_count">>, Attempt}]),
+      ?set_status(?OTEL_STATUS_ERROR, <<"request failed">>),
       Error
   end.
+
+record_attempt({ok, Status, _H, _B}) ->
+  ?set_attributes([{<<"http.response.status_code">>, Status}]);
+record_attempt({error, _Reason}) ->
+  ?set_status(?OTEL_STATUS_ERROR, <<"request failed">>).
+
+record_outcome(Attempt, Status) ->
+  ?set_attributes([{<<"http.request.resend_count">>, Attempt},
+                   {<<"http.response.status_code">>, Status}]).
+
+method_attr(Method) when is_atom(Method) ->
+  list_to_binary(string:uppercase(atom_to_list(Method))).
 
 -spec construct_url(FullPath::url(), Query::querys()) -> Url::url().
 construct_url(FullPath, Query) ->
