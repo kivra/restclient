@@ -152,7 +152,8 @@ request(Method, Type, Url, Expect, Headers0, Body, Options) ->
                         , content_type(Headers1, Type) | Headers1]),
   Retries = proplists:get_value(retries, Options, 0),
   ?with_span(<<"restc request">>,
-             #{attributes => #{<<"http.request.method">> => method_attr(Method)}},
+             #{attributes =>
+                 #{<<"http.request.method">> => method_attr(Method)}},
              fun(_SpanCtx) ->
                request_loop(Method, Type, Url, Expect, Headers, Body, Options,
                             {Retries, 0})
@@ -173,7 +174,8 @@ request_loop(Method, Type, Url, Expect, Headers, Body, Options0,
                  %% terminating) surfaces as a process exit. Without this guard
                  %% it bypasses the retry handling below and crashes the calling
                  %% process; converting it to an error lets {retries, N} cover
-                 %% transient connection failures like any other retryable response.
+                 %% transient connection failures like any other retryable
+                 %% response.
                  Result =
                    try do_request(Method, Type, Url, Headers, Body, Options)
                    catch
