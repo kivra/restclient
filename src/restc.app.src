@@ -35,6 +35,7 @@
                                       , hackney
                                       , jsx
                                       , erlsom
+                                      , opentelemetry_api
                                       ]}
                      , {env,          []}
                      , {registered,   []}
