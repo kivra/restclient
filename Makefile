@@ -12,7 +12,7 @@ else
 endif
 
 compile_elvis:
-	git clone https://github.com/inaka/elvis.git --branch 4.1.1 --single-branch .elvis && \
+	git clone https://github.com/inaka/elvis.git --branch 6.0.0 --single-branch .elvis && \
 	cd .elvis && \
 	rebar3 compile && \
 	rebar3 escriptize && \
