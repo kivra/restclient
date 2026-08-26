@@ -18,10 +18,12 @@ be explicitly overriden by the top level application.
 
 Include restclient as a rebar dependency with:
 
-	{deps, [{restc, ".*", {git, "git://github.com/kivra/restclient.git", {tag, "0.8.2"}}}]}.
+	{deps, [{restc, {git, "https://github.com/kivra/restclient.git", {tag, "0.12.0"}}}]}.
 
-You have to start inets before using the client and if you want to use https make sure to start ssl before.
-Then you can use the client as:
+The releases on hex.pm are no longer maintained, so depend on a git tag.
+
+Start the application (which brings up `hackney` and, with it, `ssl`), then use
+the client as:
 
 ``` erlang
 Erlang/OTP 19 [erts-8.2] [source] [64-bit] [smp:8:8] [async-threads:0] [kernel-poll:false]
