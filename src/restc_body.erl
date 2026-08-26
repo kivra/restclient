@@ -24,7 +24,8 @@ decode(_, <<>>, Opts) ->
         false -> []
     end;
 decode(<<"application/json">>, Body, Opts) ->
-    {Decoded, _Acc, _Rest} = json:decode(Body, ok, json_decoders(Opts)),
+    {Decoded, _Acc, Rest} = json:decode(Body, ok, json_decoders(Opts)),
+    ok = assert_no_trailing_data(Rest),
     Decoded;
 decode(<<"application/xml">>, Body, _Opts) ->
     {ok, Data, _} = erlsom:simple_form(binary_to_list(Body)),
@@ -46,6 +47,18 @@ decode(_, Body, _Opts) ->
 
 return_maps(Opts) ->
     proplists:get_bool(return_maps, Opts).
+
+%% json:decode/3 is a streaming API: it stops at the end of the first complete
+%% value and hands back everything after it. Anything but JSON whitespace there
+%% means the body is not a single JSON document, which jsx rejected as well.
+assert_no_trailing_data(<<>>) ->
+    ok;
+assert_no_trailing_data(<<C, Rest/binary>>) when
+    C =:= $\s; C =:= $\t; C =:= $\n; C =:= $\r
+->
+    assert_no_trailing_data(Rest);
+assert_no_trailing_data(<<C, _/binary>>) ->
+    error({invalid_byte, C}).
 
 %% json:encode/2 encodes a proplist as an array of two-element arrays, so
 %% objects given as proplists need to be recognised before falling back to the

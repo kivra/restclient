@@ -43,6 +43,9 @@ groups() ->
      [ no_content_type_returned__making_json_request__decode_response_as_json
      , content_type_returned__making_json_request__decode_response_as_content_type
      , return_maps
+     , return_maps_as_tuple_option
+     , trailing_data_after_json__making_request__fails
+     , trailing_whitespace_after_json__making_request__decodes
      ]}
   ,{ accept_header_and_type,
      [ type_is_json__making_request_with_no_headers__accept_header_is_json
@@ -230,6 +233,30 @@ return_maps(_Config) ->
     restc:request(get, na, <<"http://any_url.com">>, [], [], <<>>, [return_maps]),
 
   ?assertEqual(ResponseBody, ActualResponseBody).
+
+return_maps_as_tuple_option(_Config) ->
+  ResponseBody = #{<<"first_level">> => #{<<"second_level">> => [<<"a">>, <<"b">>]}},
+  EncodedResponseBody = iolist_to_binary(json:encode(ResponseBody)),
+  mock_hackney_success(200, [{<<"Content-Type">>, <<"application/json">>}], EncodedResponseBody),
+
+  {ok, _, _, ActualResponseBody} =
+    restc:request(get, na, <<"http://any_url.com">>, [], [], <<>>, [{return_maps, true}]),
+
+  ?assertEqual(ResponseBody, ActualResponseBody).
+
+trailing_data_after_json__making_request__fails(_Config) ->
+  mock_hackney_success(200, [{<<"Content-Type">>, <<"application/json">>}],
+                       <<"{\"any\":\"data\"}garbage">>),
+
+  ?assertError({invalid_byte, $g}, restc:request(get, <<"http://any_url.com">>)).
+
+trailing_whitespace_after_json__making_request__decodes(_Config) ->
+  mock_hackney_success(200, [{<<"Content-Type">>, <<"application/json">>}],
+                       <<"{\"any\":\"data\"}\n\t ">>),
+
+  {ok, _, _, ActualResponseBody} = restc:request(get, <<"http://any_url.com">>),
+
+  ?assertEqual([{<<"any">>, <<"data">>}], ActualResponseBody).
 
 type_is_json__making_request_with_no_headers__accept_header_is_json(_Config) ->
   mock_hackney_success(200),

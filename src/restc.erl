@@ -65,6 +65,7 @@
                         binary() | atom()    |
                         [json_term()]        |
                         [{binary() | atom(), json_term()}] |
+                        [{}] | % the empty object, as a proplist
                         #{binary() | atom() => json_term()}.
 -type body()         :: binary()             |
                         json_term()          |

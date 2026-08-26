@@ -26,12 +26,8 @@ Start the application (which brings up `hackney` and, with it, `ssl`), then use
 the client as:
 
 ``` erlang
-Erlang/OTP 19 [erts-8.2] [source] [64-bit] [smp:8:8] [async-threads:0] [kernel-poll:false]
-
-Eshell V8.2  (abort with ^G)
 1> application:ensure_all_started(restc).
-{ok,[idna,mimerl,certifi,ssl_verify_fun,metrics,hackney,
-     mochiweb_util,restc]}
+{ok, [...]}
 
 2> restc:request(get, "https://api.github.com").
 {ok,200,
