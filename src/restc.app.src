@@ -33,7 +33,6 @@
                                       , public_key
                                       , ssl
                                       , hackney
-                                      , jsx
                                       , erlsom
                                       , opentelemetry_api
                                       ]}

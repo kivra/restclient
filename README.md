@@ -7,6 +7,9 @@ restclient is a library to help with consuming RESTful web services. It supports
 encoding and decoding JSON, Percent and XML and comes with a convenience
 function for working with urls and query parameters.
 
+__REQUIRES OTP 27 OR LATER__: JSON is handled by the `json` module from stdlib,
+which was introduced in OTP 27.
+
 __IMPORTANT__: The library has been updated to use `hackney v4`, but the usage
 is backwards compatible with `v1`. In case an older version is required, it must
 be explicitly overriden by the top level application.

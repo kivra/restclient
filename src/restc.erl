@@ -60,8 +60,14 @@
 -type status_code()  :: integer().
 -type reason()       :: term().
 -type content_type() :: multi | json | xml | percent | png.
+-type json_term()    :: null | boolean()     |
+                        number()             |
+                        binary() | atom()    |
+                        [json_term()]        |
+                        [{binary() | atom(), json_term()}] |
+                        #{binary() | atom() => json_term()}.
 -type body()         :: binary()             |
-                        jsx:json_term()      |
+                        json_term()          |
                         tuple() | % check erlsom:simple_form/1,2
                         multi_body().
 -type multi_part()   :: {Name::binary(), Value::binary()} |
@@ -93,6 +99,7 @@
              , status_code/0
              , reason/0
              , content_type/0
+             , json_term/0
              , body/0
              , response/0
              ]).
