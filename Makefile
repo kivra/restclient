@@ -1,17 +1,3 @@
-PROJECT = restc
-
-# Dependencies ##########################################################
-DEPS = hackney jsx erlsom
-
-dep_hackney       = hex 1.20.1
-dep_jsx           = hex 3.1.0
-dep_erlsom        = hex 1.5.1
-
-# Standard targets #####################################################
-include erlang.mk
-
-app:: rebar.config
-
 ELVIS_IN_PATH := $(shell elvis --version 2> /dev/null)
 ELVIS_LOCAL := $(shell .elvis/_build/default/bin/elvis --version 2> /dev/null)
 
@@ -26,10 +12,10 @@ else
 endif
 
 compile_elvis:
-	git clone https://github.com/inaka/elvis.git --branch 4.1.1 --single-branch .elvis && \
+	git clone https://github.com/inaka/elvis.git --branch 6.0.0 --single-branch .elvis && \
 	cd .elvis && \
 	rebar3 compile && \
 	rebar3 escriptize && \
 	cd ..
 
-# eof
+.PHONY: elvis_rock compile_elvis

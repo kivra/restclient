@@ -8,11 +8,16 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    strategy:
+      fail-fast: false
+      matrix:
+        otp-version: ["27", "28", "29"]
+
     steps:
     - uses: actions/checkout@v6
     - uses: erlef/setup-beam@v1.20.4
       with:
-        otp-version: "27"
+        otp-version: ${{ matrix.otp-version }}
         rebar3-version: "3.26.0"
     - name: Compile
       run: rebar3 compile
@@ -29,11 +34,16 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    strategy:
+      fail-fast: false
+      matrix:
+        otp-version: ["27", "28", "29"]
+
     steps:
     - uses: actions/checkout@v6
     - uses: erlef/setup-beam@v1.20.4
       with:
-        otp-version: "27"
+        otp-version: ${{ matrix.otp-version }}
         rebar3-version: "3.26.0"
     - name: Run dialyzer
       run: rebar3 dialyzer

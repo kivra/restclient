@@ -2,8 +2,13 @@
 
 -export([encode/2, decode/3]).
 
+%% jsx represented the empty JSON object as [{}] rather than []; the latter is
+%% an empty array. That distinction is part of the public decoding contract, so
+%% it is preserved here now that the OTP `json` module does the work.
+-define(EMPTY_OBJECT, [{}]).
+
 encode(json, Body) ->
-    jsx:encode(Body);
+    iolist_to_binary(json:encode(Body, fun encode_json/2));
 encode(percent, Body) when is_map(Body) ->
     hackney_url:qs(maps:to_list(Body), []);
 encode(percent, Body) ->
@@ -14,17 +19,14 @@ encode(multi, Body) ->
     {multipart, Body}.
 
 decode(_, <<>>, Opts) ->
-    case proplists:get_bool(return_maps, Opts) of
+    case return_maps(Opts) of
         true -> #{};
-        _ -> []
+        false -> []
     end;
-decode(<<"application/json">>, Body, Opts0) ->
-    Opts =
-        case lists:member(return_maps, Opts0) of
-            true -> [{return_maps, true}];
-            false -> [{return_maps, false}]
-        end,
-    jsx:decode(Body, Opts);
+decode(<<"application/json">>, Body, Opts) ->
+    {Decoded, _Acc, Rest} = json:decode(Body, ok, json_decoders(Opts)),
+    ok = assert_no_trailing_data(Rest),
+    Decoded;
 decode(<<"application/xml">>, Body, _Opts) ->
     {ok, Data, _} = erlsom:simple_form(binary_to_list(Body)),
     Data;
@@ -34,9 +36,61 @@ decode(<<"image/png">>, Body, _Opts) ->
     Body;
 decode(<<"application/x-www-form-urlencoded">>, Body, Opts) ->
     KeyValueList = hackney_url:parse_qs(Body),
-    case proplists:get_bool(return_maps, Opts) of
+    case return_maps(Opts) of
         true -> maps:from_list(KeyValueList);
-        _ -> KeyValueList
+        false -> KeyValueList
     end;
 decode(_, Body, _Opts) ->
     Body.
+
+%%% INTERNAL ===================================================================
+
+return_maps(Opts) ->
+    proplists:get_bool(return_maps, Opts).
+
+%% json:decode/3 is a streaming API: it stops at the end of the first complete
+%% value and hands back everything after it. Anything but JSON whitespace there
+%% means the body is not a single JSON document, which jsx rejected as well.
+assert_no_trailing_data(<<>>) ->
+    ok;
+assert_no_trailing_data(<<C, Rest/binary>>) when
+    C =:= $\s; C =:= $\t; C =:= $\n; C =:= $\r
+->
+    assert_no_trailing_data(Rest);
+assert_no_trailing_data(<<C, _/binary>>) ->
+    error({invalid_byte, C}).
+
+%% json:encode/2 encodes a proplist as an array of two-element arrays, so
+%% objects given as proplists need to be recognised before falling back to the
+%% default encoder that handles maps, lists and scalars.
+encode_json(?EMPTY_OBJECT, _Encode) ->
+    <<"{}">>;
+encode_json([{_, _} | _] = Proplist, Encode) ->
+    json:encode_key_value_list(Proplist, Encode);
+encode_json(Other, Encode) ->
+    json:encode_value(Other, Encode).
+
+json_decoders(Opts) ->
+    case return_maps(Opts) of
+        true ->
+            #{object_finish => fun finish_map/2};
+        false ->
+            #{
+                object_start => fun(_Acc) -> [] end,
+                object_push => fun push_member/3,
+                object_finish => fun finish_proplist/2
+            }
+    end.
+
+%% The default object_finish keeps the first of a set of duplicate keys; jsx
+%% kept the last. Reversing before building the map restores that.
+finish_map(Members, OldAcc) ->
+    {maps:from_list(lists:reverse(Members)), OldAcc}.
+
+push_member(Key, Value, Members) ->
+    [{Key, Value} | Members].
+
+finish_proplist([], OldAcc) ->
+    {?EMPTY_OBJECT, OldAcc};
+finish_proplist(Members, OldAcc) ->
+    {lists:reverse(Members), OldAcc}.

@@ -43,6 +43,9 @@ groups() ->
      [ no_content_type_returned__making_json_request__decode_response_as_json
      , content_type_returned__making_json_request__decode_response_as_content_type
      , return_maps
+     , return_maps_as_tuple_option
+     , trailing_data_after_json__making_request__fails
+     , trailing_whitespace_after_json__making_request__decodes
      ]}
   ,{ accept_header_and_type,
      [ type_is_json__making_request_with_no_headers__accept_header_is_json
@@ -148,7 +151,7 @@ type_is_json__making_request__sends_json_encoded_body(_Config) ->
   restc:request(post, json, <<"http://any_url.com">>, [200], [], Body),
 
   EncodedBody = meck:capture(first, hackney, request, '_', 4, '_'),
-  ?assert(jsx:is_json(EncodedBody)).
+  ?assert(is_json(EncodedBody)).
 
 type_is_percent__making_request__sends_percent_encoded_body(_Config) ->
   mock_hackney_success(200),
@@ -172,27 +175,27 @@ type_is_xml__making_request__sends_xml_encoded_body(_Config) ->
 
 method_is_post__making_request__body_is_encoded(_Config) ->
   mock_hackney_success(200),
-  meck:new(jsx, [passthrough]),
 
   restc:request(post, json, <<"http://any_url.com">>, [200], [], [{<<"any">>, <<"data">>}]),
 
-  ?assert(meck:called(jsx, encode, '_')).
+  ActualBody = meck:capture(first, hackney, request, '_', 4, '_'),
+  ?assertEqual(<<"{\"any\":\"data\"}">>, ActualBody).
 
 method_is_put__making_request__body_is_encoded(_Config) ->
   mock_hackney_success(200),
-  meck:new(jsx, [passthrough]),
 
   restc:request(put, json, <<"http://any_url.com">>, [200], [], [{<<"any">>, <<"data">>}]),
 
-  ?assert(meck:called(jsx, encode, '_')).
+  ActualBody = meck:capture(first, hackney, request, '_', 4, '_'),
+  ?assertEqual(<<"{\"any\":\"data\"}">>, ActualBody).
 
 method_is_patch__making_request__body_is_encoded(_Config) ->
   mock_hackney_success(200),
-  meck:new(jsx, [passthrough]),
 
   restc:request(patch, json, <<"http://any_url.com">>, [200], [], [{<<"any">>, <<"data">>}]),
 
-  ?assert(meck:called(jsx, encode, '_')).
+  ActualBody = meck:capture(first, hackney, request, '_', 4, '_'),
+  ?assertEqual(<<"{\"any\":\"data\"}">>, ActualBody).
 
 method_is_something_else__making_request__body_is_empty_list(_Config) ->
   mock_hackney_success(200),
@@ -205,7 +208,7 @@ method_is_something_else__making_request__body_is_empty_list(_Config) ->
 
 no_content_type_returned__making_json_request__decode_response_as_json(_Config) ->
   ExpectedResponseBody = [{<<"any">>, <<"data">>}],
-  mock_hackney_success(200, [], jsx:encode(ExpectedResponseBody)),
+  mock_hackney_success(200, [], <<"{\"any\":\"data\"}">>),
 
   {ok, _, _, ActualResponseBody} = restc:request(get, <<"http://any_url.com">>),
 
@@ -223,13 +226,37 @@ content_type_returned__making_json_request__decode_response_as_content_type(_Con
 
 return_maps(_Config) ->
   ResponseBody = #{<<"first_level">> => #{<<"second_level">> => [<<"a">>, <<"b">>]}},
-  EncodedResponseBody = jsx:encode(ResponseBody),
+  EncodedResponseBody = iolist_to_binary(json:encode(ResponseBody)),
   mock_hackney_success(200, [{<<"Content-Type">>, <<"application/json">>}], EncodedResponseBody),
 
   {ok, _, _, ActualResponseBody} =
     restc:request(get, na, <<"http://any_url.com">>, [], [], <<>>, [return_maps]),
 
   ?assertEqual(ResponseBody, ActualResponseBody).
+
+return_maps_as_tuple_option(_Config) ->
+  ResponseBody = #{<<"first_level">> => #{<<"second_level">> => [<<"a">>, <<"b">>]}},
+  EncodedResponseBody = iolist_to_binary(json:encode(ResponseBody)),
+  mock_hackney_success(200, [{<<"Content-Type">>, <<"application/json">>}], EncodedResponseBody),
+
+  {ok, _, _, ActualResponseBody} =
+    restc:request(get, na, <<"http://any_url.com">>, [], [], <<>>, [{return_maps, true}]),
+
+  ?assertEqual(ResponseBody, ActualResponseBody).
+
+trailing_data_after_json__making_request__fails(_Config) ->
+  mock_hackney_success(200, [{<<"Content-Type">>, <<"application/json">>}],
+                       <<"{\"any\":\"data\"}garbage">>),
+
+  ?assertError({invalid_byte, $g}, restc:request(get, <<"http://any_url.com">>)).
+
+trailing_whitespace_after_json__making_request__decodes(_Config) ->
+  mock_hackney_success(200, [{<<"Content-Type">>, <<"application/json">>}],
+                       <<"{\"any\":\"data\"}\n\t ">>),
+
+  {ok, _, _, ActualResponseBody} = restc:request(get, <<"http://any_url.com">>),
+
+  ?assertEqual([{<<"any">>, <<"data">>}], ActualResponseBody).
 
 type_is_json__making_request_with_no_headers__accept_header_is_json(_Config) ->
   mock_hackney_success(200),
@@ -273,6 +300,13 @@ type_is_json__making_request_with_xml_accept_header__accept_header_overrides_typ
   ?assertMatch([{<<"accept">>, <<"application/xml", _/binary>>}, _], ActualHeaders).
 
 %%%_ * Helpers ---------------------------------------------------------
+is_json(Binary) ->
+  try json:decode(Binary) of
+    _ -> true
+  catch
+    error:_ -> false
+  end.
+
 mock_hackney_success(Code) -> mock_hackney_success(Code, [], <<>>).
 
 mock_hackney_success(Code, Headers, Body) ->
